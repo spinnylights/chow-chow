@@ -1,82 +1,104 @@
 #ifndef S1ced45b2e3d4532b474c1fca1127b34
 #define S1ced45b2e3d4532b474c1fca1127b34
 
-#include <cstdint>
-#include <vector>
-#include <array>
-
-#include "chow-chow/sample.hpp"
-#include "chow-chow/setting.hpp"
-#include "chow-chow/phase.hpp"
-
 namespace ChowChow {
+    /**
+     * @brief An FM operator.
+     *
+     * An FM operator (technically a phase modulation operator).
+     * Generates a sinusoid by itself, but can also be modulated
+     * by another signal.
+     */
     class Operator {
     public:
-        inline Operator(unsigned int sample_rate,
-                        std::size_t _id = 0,
-                        std::size_t op_count = 1)
-            :sr{sample_rate},
-             i{_id}
-        {
-            outputs = std::vector<Sample>(op_count);
-            modulations = std::vector<Sample>(op_count);
-        }
+        /**
+         * @brief The current state of the wave, taking into
+         * account the ratio, offset, and vibrato.
+         *
+         * @param time in seconds.
+         */
+        double wave(double time) const;
 
-        static constexpr std::size_t OVERSAMPLING = 64;
-        using overwin_t = std::array<long double, OVERSAMPLING>;
+        /**
+         * @brief The current state of the vibrato wave.
+         *
+         * @param time in seconds.
+         */
+        double vibrato(double time) const;
 
-        static constexpr double SPREAD_MAX = 20.;
-        static constexpr double PARTIALS_MAX = 50.;
+        /**
+         * @brief The current state of the output signal.
+         *
+         * @param time in seconds.
+         * @param mod optionally, the modulating signal.
+         */
+        double sig(double time, double mod = 0.) const;
 
-        constexpr auto id() const { return i; }
-        constexpr auto spread() const { return spr.val(); }
-        constexpr auto spread_raw() const { return spr.val_raw(); }
-        constexpr auto partials() const { return parts.val(); }
-        constexpr auto partials_raw() const { return parts.val_raw(); }
-        bool feedback() const;
-        constexpr auto needs_recalc() const { return rc; }
-        constexpr auto send_out() const { return send; }
-        constexpr auto amp() const { return samp.amp(); }
-        constexpr auto amp_f() const { return samp.amp_f(); }
-        constexpr auto sample() const { return samp.val(); }
-        constexpr auto sample_f() const { return samp.val_f(); }
-        //constexpr auto position() const { return pos.phase_d(); }
-        constexpr auto position() const { return pos; }
-        constexpr auto o_step() const { return over_step; }
+        /**
+         * @brief Sets the oscillation frequency.
+         *
+         * @param rate in Hz.
+         */
+        void freq(double rate);
 
-        inline void spread(double f) { spr.val(f); }
-        inline void partials(double f) { parts.val(f); }
-        inline void set_recalc(bool b) { rc = b; }
-        void frequency(long double f);
-        inline void advance() { pos += step; }
-        inline void advance(Phase p) { pos += step + p; }
-        inline void advance(unsigned int times)
-        {
-            for (unsigned int i = 0; i < times; ++i) { advance(); }
-        }
-        void set_output(std::size_t id, const Sample& amp);
-        void set_mod_from(std::size_t id, const Sample& amp);
-        //void calc();
-        void calc(Operator mod, long double index);
+        /**
+         * @brief Adjusts the frequency by a small offset.
+         *
+         * This can be useful for chorus-like effects.
+         *
+         * @param factor in the range of -1.0–1.0 or so. 0 is
+         * neutral.
+         */
+        void freq_offset(double factor);
+
+        /**
+         * @brief The rate of vibrato.
+         *
+         * @param rate in Hz; a range of 0.1–19 or so.
+         */
+        void vibrato_freq(double rate);
+
+        /**
+         * @brief The strength of vibrato.
+         *
+         * @param amp in the range of 1.0–0.1 or so. 0 turns the
+         * vibrato off.
+         */
+        void vibrato_amp(double amp);
+
+        /**
+         * @brief The modulation ratio.
+         *
+         * A coefficient of the frequency. Increases the spacing
+         * of the partials in the carrier if this operator is
+         * used as a modulator.
+         *
+         * @param factor ordinarily in the range of 0.25–20.
+         * Higher values may cause aliasing if the operator isn't
+         * oversampled sufficiently.
+         */
+        void ratio(double n);
+
+        /**
+         * @brief The modulation index.
+         *
+         * A coefficient of the output signal. Increases the
+         * strength and quantity of partials in the carrier if
+         * this operator is used as a modulator.
+         *
+         * @param factor ordinarily in the range of 0.25–20.
+         * Higher values may cause aliasing if the operator isn't
+         * oversampled sufficiently.
+         */
+        void index(double n);
 
     private:
-        const std::size_t i;
-        unsigned int sr;
-
-        Setting spr {SPREAD_MAX};
-        Setting parts = {PARTIALS_MAX};
-
-        std::vector<Sample> outputs;
-        std::vector<Sample> modulations;
-
-        bool rc = false;
-        bool send = false;
-
-        Phase step;
-        Phase over_step;
-        Phase pos;
-
-        Sample samp;
+        double frq = 440.;
+        double frq_offset = 0.;
+        double rtio = 1.;
+        double vibr_freq = 0.;
+        double vibr_amp = 0.;
+        double ndx = 1.;
     };
 }
 

@@ -2,6 +2,7 @@
 #include<bitset>
 #include<sstream>
 #include<fstream>
+#include<climits>
 
 #include "chow-chow/wav_file.hpp"
 

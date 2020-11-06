@@ -8,18 +8,6 @@ function(setup exe)
         target_link_libraries("${exe}" PUBLIC libchowchow)
 endfunction()
 
-add_executable(sine
-               sine.cpp
-               ${HEADER_LIST}
-               )
-setup(sine)
-
-add_executable(simple
-               simple.cpp
-               ${HEADER_LIST}
-               )
-setup(simple)
-
 add_executable(gunstar
                gunstar.cpp
                ${HEADER_LIST}

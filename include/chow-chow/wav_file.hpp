@@ -5,8 +5,6 @@
 #include<filesystem>
 #include<string>
 
-#include "operator.hpp"
-
 namespace ChowChow {
     /**
      * @brief Represents audio in RIFF WAVE format.
@@ -20,7 +18,7 @@ namespace ChowChow {
          * @param samples a stereo-interleaved collection of
          * samples.
          *
-         * @param sample_rate in kHz.
+         * @param sample_rate in Hz.
          */
         WAVFile(const std::vector<long double>& samples,
                 unsigned int sample_rate);
