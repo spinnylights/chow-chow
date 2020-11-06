@@ -19,3 +19,9 @@ add_executable(simple
                ${HEADER_LIST}
                )
 setup(simple)
+
+add_executable(gunstar
+               gunstar.cpp
+               ${HEADER_LIST}
+               )
+setup(gunstar)
