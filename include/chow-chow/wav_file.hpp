@@ -4,6 +4,7 @@
 #include<vector>
 #include<filesystem>
 #include<string>
+#include<climits>
 
 namespace ChowChow {
     /**
@@ -14,6 +15,10 @@ namespace ChowChow {
      */
     class WAVFile {
     public:
+        static constexpr uint32_t NUM_CHANNELS = 2;
+        static constexpr uint32_t BITS_PER_SAMPLE = 24;
+        static constexpr uint32_t BYTES_PER_SAMPLE = BITS_PER_SAMPLE / CHAR_BIT;
+
         /**
          * @param samples a stereo-interleaved collection of
          * samples.
@@ -49,9 +54,6 @@ namespace ChowChow {
         void write(std::filesystem::path path) const;
 
     private:
-        static constexpr uint32_t NUM_CHANNELS = 2;
-        static constexpr uint32_t BITS_PER_SAMPLE = 24;
-
         const unsigned int sr;
 
         std::vector<long double> ns = {};
