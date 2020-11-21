@@ -5,25 +5,25 @@
 
 using namespace ChowChow;
 
-double Operator::wave(double phi) const
+double Operator::wave(double theta) const
 {
-    const double freq_base = (frq + vibrato(phi)) * rtio;
+    const double freq_base = (frq + vibrato(theta)) * rtio;
 
     return freq_base + freq_base * frq_offset;
 }
 
-double Operator::vibrato(double phi) const
+double Operator::vibrato(double theta) const
 {
     if (vibr_amp == 0. || vibr_freq == 0.) {
         return 0;
     } else {
-        return frq * vibr_amp * std::sin(vibr_freq * phi * TAU);
+        return frq * vibr_amp * std::sin(vibr_freq * theta * TAU);
     }
 }
 
-double Operator::sig(double phi, double mod) const
+double Operator::sig(double theta, double mod) const
 {
-    return std::sin(wave(phi) * phi * TAU + mod) * ndx;
+    return std::sin(wave(theta) * theta * TAU + mod) * ndx;
 }
 
 void Operator::freq(double n)
