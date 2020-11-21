@@ -8,6 +8,7 @@ add_library(libchowchow
             frequency.cpp
             sample.cpp
             operator.cpp
+            operators.cpp
             wav_file.cpp
             )
 

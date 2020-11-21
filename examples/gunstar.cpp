@@ -3,7 +3,7 @@
 #include <numeric>
 #include <algorithm>
 
-#include "chow-chow/operator.hpp"
+#include "chow-chow/operators.hpp"
 #include "chow-chow/constants.hpp"
 #include "chow-chow/wav_file.hpp"
 
@@ -22,32 +22,40 @@ int main(void)
     const double vib_frq = 10;
     const double vib_amp = 1.;
 
-    Operator op_4;
-    op_4.freq(freq);
-    op_4.freq_offset(-.912);
-    op_4.vibrato_freq(vib_frq);
-    op_4.vibrato_amp(vib_amp);
+    Operators<4> ops;
 
-    Operator op_3;
-    op_3.freq(freq);
-    op_3.freq_offset(-.801);
-    op_3.ratio(2.);
-    op_3.vibrato_freq(vib_frq * 1.002);
-    op_3.vibrato_amp(vib_amp);
+    ops[4].freq(freq);
+    ops[4].freq_offset(-.912);
+    ops[4].vibrato_freq(vib_frq);
+    ops[4].vibrato_amp(vib_amp);
 
-    Operator op_2;
-    op_2.freq(freq);
-    op_2.freq_offset(.648);
-    op_2.ratio(0.5);
-    op_2.vibrato_freq(vib_frq * 0.998);
-    op_2.vibrato_amp(vib_amp);
+    ops[3].freq(freq);
+    ops[3].freq_offset(-.801);
+    ops[3].ratio(2.);
+    ops[3].vibrato_freq(vib_frq * 1.002);
+    ops[3].vibrato_amp(vib_amp);
 
-    Operator op_1;
-    op_1.freq(freq);
-    op_1.freq_offset(-.763);
-    op_1.ratio(5.);
-    op_1.vibrato_freq(vib_frq * (1. - (1. / 3.192)));
-    op_1.vibrato_amp(vib_amp * 0.512);
+    ops[2].freq(freq);
+    ops[2].freq_offset(.648);
+    ops[2].ratio(0.5);
+    ops[2].vibrato_freq(vib_frq * 0.998);
+    ops[2].vibrato_amp(vib_amp);
+
+    ops[1].freq(freq);
+    ops[1].freq_offset(-.763);
+    ops[1].ratio(5.);
+    ops[1].vibrato_freq(vib_frq * (1. - (1. / 3.192)));
+    ops[1].vibrato_amp(vib_amp * 0.512);
+
+    ops.connect(4, 4);
+    ops.connect(4, 3);
+    ops.connect(4, 2);
+    ops.connect(4, 1);
+    ops.reorder();
+
+    ops.output(3);
+    ops.output(2);
+    ops.output(1);
 
     constexpr size_t SAMPLE_RATE = 48000;
     constexpr size_t OVERSAMPLING = 4;
@@ -113,21 +121,18 @@ int main(void)
         for (size_t j = 0; j < OVERSAMPLING; ++j) {
             const auto sample_n = i + j;
 
-            const double phi = static_cast<double>(sample_n) / RATE;
+            const double theta = static_cast<double>(sample_n) / RATE;
 
-            op_4.index(5.969 * ramp[i]);
-            op_3.index(8.231 * ramp[i]);
-            op_2.index(8.231 * ramp[i]);
-            op_1.index(20.96 * ramp[i]);
+            ops[4].index(5.969 * ramp[i]);
+            ops[3].index(8.231 * ramp[i]);
+            ops[2].index(8.231 * ramp[i]);
+            ops[1].index(20.96 * ramp[i]);
 
-            const auto sig_4_1 = op_4.sig(phi);
-            const auto sig_4   = op_4.sig(phi, sig_4_1);
-            const auto sig_3   = op_3.sig(phi, sig_4 * 1.87 * ramp[i]);
-            const auto sig_2   = op_2.sig(phi, sig_4 * 1.87 * ramp[i]);
-            const auto sig_1   = op_1.sig(phi, sig_4 * 1.87 * ramp[i]);
+            ops.connect(4, 3, 1.87 * ramp[i]);
+            ops.connect(4, 2, 1.87 * ramp[i]);
+            ops.connect(4, 1, 1.87 * ramp[i]);
 
-            const auto sig = sig_1 + sig_2 + sig_3;
-            oversample_win[j] = sig * envelope[i];
+            oversample_win[j] = ops.sig(theta) * envelope[i];
         }
         i += OVERSAMPLING;
 
