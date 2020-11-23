@@ -25,14 +25,14 @@ namespace ChowChow {
          *
          * @param sample_rate in Hz.
          */
-        WAVFile(const std::vector<long double>& samples,
+        WAVFile(const std::vector<double>& samples,
                 unsigned int sample_rate);
 
         /**
-         * @copydoc WAVFile(const std::vector<long double>&,
+         * @copydoc WAVFile(const std::vector<double>&,
          * unsigned int)
          */
-        WAVFile(std::vector<long double>&& samples,
+        WAVFile(std::vector<double>&& samples,
                 unsigned int sample_rate);
 
         /**
@@ -56,7 +56,7 @@ namespace ChowChow {
     private:
         const unsigned int sr;
 
-        std::vector<long double> ns = {};
+        std::vector<double> ns = {};
     };
 }
 

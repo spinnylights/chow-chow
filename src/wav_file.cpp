@@ -9,13 +9,13 @@
 namespace fs = std::filesystem;
 using namespace ChowChow;
 
-WAVFile::WAVFile(const std::vector<long double>& samps,
+WAVFile::WAVFile(const std::vector<double>& samps,
                  unsigned int sample_rate)
     :ns{samps},
      sr{sample_rate}
 {}
 
-WAVFile::WAVFile(std::vector<long double>&& samps,
+WAVFile::WAVFile(std::vector<double>&& samps,
                  unsigned int sample_rate)
     :sr{sample_rate}
 {

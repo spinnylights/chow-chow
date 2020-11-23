@@ -2,61 +2,88 @@
 
 #include "chow-chow/constants.hpp"
 #include "chow-chow/operator.hpp"
+#include "chow-chow/sine_tab.hpp"
 
 using namespace ChowChow;
 
-double Operator::wave(double theta) const
+double Operator::sig() const
 {
-    const double freq_base = (frq + vibrato(theta)) * rtio;
+    auto amp = phase.amp();
 
-    return freq_base + freq_base * frq_offset;
+    //for (const auto& m : mods) {
+    //    amp *= m.mod->sig() * m.amp;
+    //}
+
+    return amp;
 }
 
-double Operator::vibrato(double theta) const
+void Operator::advance()
 {
-    if (vibr_amp == 0. || vibr_freq == 0.) {
-        return 0;
+    if (vibr_on) {
+        phase.advance(vibr);
     } else {
-        return frq * vibr_amp * std::sin(vibr_freq * theta * TAU);
+        phase.advance();
+    }
+
+    for (const auto& m : mods) {
+        phase += m.mod->sig() * m.amp;
     }
 }
 
-double Operator::sig(double theta, double mod) const
+void Operator::reset_frq()
 {
-    return std::sin(wave(theta) * theta * TAU + mod) * ndx;
+    phase.frequency((frq + frq_offset) * rtio);
 }
 
 void Operator::freq(double n)
 {
-    constexpr double FREQ_MIN = 20.;
-    constexpr double FREQ_MAX = 20000.;
-
-    if (n < FREQ_MIN) { n = FREQ_MIN; }
-
-    if (n > FREQ_MAX) { n = FREQ_MAX; }
-
     frq = n;
+    reset_frq();
 }
 
 void Operator::freq_offset(double n)
 {
     frq_offset = n * 0.001;
+    reset_frq();
 }
 
-void Operator::ratio(double n) { rtio = n; }
+void Operator::ratio(double n)
+{
+    rtio = n;
+    reset_frq();
+}
 
 void Operator::vibrato_freq(double n)
 {
-    constexpr double FREQ_MAX = 19.;
-
-    if (n > FREQ_MAX) { n = FREQ_MAX; }
-
-    vibr_freq = n;
+    vibr.frequency(n);
 }
 
 void Operator::vibrato_amp(double n)
 {
-    vibr_amp = n * 0.0001;
+    if (n == 0.) {
+        vibr_on = false;
+    } else {
+        vibr_on = true;
+        vibr.output_amp(n * 0.0001);
+    }
 }
 
-void Operator::index(double n) { ndx = n; }
+void Operator::index(double n)
+{
+    phase.output_amp(n / 100.);
+}
+
+void Operator::sample_rate(PhaseAcc::phase_t rate)
+{
+    phase.sample_rate(rate);
+}
+
+void Operator::add_modulator(const Operator& op, PhaseAcc::amp_t amp)
+{
+    mods.push_back({&op, amp});
+}
+
+void Operator::clear_modulators()
+{
+    mods.clear();
+}

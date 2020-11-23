@@ -8,7 +8,7 @@
 
 using namespace ChowChow;
 
-static const std::vector<long double> expected = {1., 0.5, -1., -0.5};
+static const std::vector<double> expected = {1., 0.5, -1., -0.5};
 
 WAVFile file() { return WAVFile {expected, 48000}; }
 

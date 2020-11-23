@@ -2,31 +2,55 @@
 #define odd10ca20e8c4c1d90cc4cfef8b0e13e
 
 #include <cstdint>
+#include <climits>
+#include <cmath>
 
 namespace ChowChow {
     class Frequency {
     public:
-        using freq_t = uint16_t;
-        static constexpr freq_t FREQ_MAX = UINT16_MAX;
-        static constexpr freq_t FREQ_MIN = 0;
+        using freq_t = uint64_t;
+
+        static constexpr int FREQ_INT_BITS = 21; // enough for 20000 * 100
+        static constexpr int FREQ_FRAC_BITS =
+            sizeof(freq_t)*CHAR_BIT - FREQ_INT_BITS;
+        static const freq_t MAX_FRAC = std::pow(2, FREQ_FRAC_BITS) - 1;
+        static const freq_t MAX_INT = std::pow(2, FREQ_INT_BITS) - 1;
 
         Frequency() {};
-        Frequency(freq_t integ, freq_t frct) :i{integ}, f{frct} {}
-        Frequency(double f);
+        Frequency(freq_t n) :f{n} {};
+        Frequency(double);
+        Frequency(unsigned int);
+        Frequency(int n) : Frequency(static_cast<unsigned int>(n)) {};
 
-        constexpr freq_t intg() const { return i; }
-        constexpr freq_t frac() const { return f; }
-        double freq() const;
-        double frac_f() const;
+        freq_t intg() const { return f >> FREQ_FRAC_BITS; }
+        freq_t frac() const { return f & MAX_FRAC; }
+        freq_t raw() const { return f; }
+        double make_double() const;
 
-        void intg(freq_t integ) { i = integ; }
-        void frac(freq_t frct) { f = frct; }
-        void freq(double f);
+        Frequency& operator+=(Frequency fr) { f += fr.raw(); return *this; }
+        Frequency& operator-=(Frequency fr) { f -= fr.raw(); return *this; }
+        Frequency& operator*=(Frequency fr);
+        Frequency& operator/=(Frequency fr);
 
     private:
-        uint16_t i = FREQ_MIN;
-        uint16_t f = FREQ_MIN;
+        freq_t f = 1;
     };
+
+    inline Frequency operator+(Frequency a, Frequency b) { return a += b; }
+    inline Frequency operator-(Frequency a, Frequency b) { return a -= b; }
+    inline Frequency operator*(Frequency a, Frequency b) { return a *= b; }
+    inline Frequency operator/(Frequency a, Frequency b) { return a /= b; }
+
+    inline bool operator==(Frequency a, Frequency b)
+    {
+        return a.raw() == b.raw();
+    }
+
+    inline bool operator!=(Frequency a, Frequency b)
+    {
+        return a.raw() != b.raw();
+    }
+
 }
 
 #endif

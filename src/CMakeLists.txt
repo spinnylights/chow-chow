@@ -10,6 +10,7 @@ add_library(libchowchow
             operator.cpp
             operators.cpp
             wav_file.cpp
+            phase_acc.cpp
             )
 
 set_property(TARGET libchowchow PROPERTY CXX_STANDARD 17)

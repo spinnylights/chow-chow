@@ -1,6 +1,13 @@
 #ifndef S1ced45b2e3d4532b474c1fca1127b34
 #define S1ced45b2e3d4532b474c1fca1127b34
 
+#include <cstdint>
+#include <climits>
+#include <vector>
+
+#include "chow-chow/frequency.hpp"
+#include "chow-chow/phase_acc.hpp"
+
 namespace ChowChow {
     /**
      * @brief An FM operator.
@@ -12,27 +19,19 @@ namespace ChowChow {
     class Operator {
     public:
         /**
-         * @brief The current state of the wave, taking into
-         * account the ratio, offset, and vibrato.
-         *
-         * @param time in seconds.
-         */
-        double wave(double time) const;
-
-        /**
-         * @brief The current state of the vibrato wave.
-         *
-         * @param time in seconds.
-         */
-        double vibrato(double time) const;
-
-        /**
          * @brief The current state of the output signal.
          *
-         * @param time in seconds.
-         * @param mod optionally, the modulating signal.
          */
-        double sig(double time, double mod = 0.) const;
+        double sig() const;
+
+        /**
+         * @brief Advance the operator by a sample.
+         *
+         * Advance the internal state of the operator by a period
+         * of one sample. Should ordinarily be called once a
+         * frame.
+         */
+        void advance();
 
         /**
          * @brief Sets the oscillation frequency.
@@ -62,7 +61,7 @@ namespace ChowChow {
          * @brief The strength of vibrato.
          *
          * @param amp in the range of 1.0–0.1 or so. 0 turns the
-         * vibrato off.
+         * vibrato off. It is off by default.
          */
         void vibrato_amp(double amp);
 
@@ -92,13 +91,51 @@ namespace ChowChow {
          */
         void index(double n);
 
+        /**
+         * @brief The sample rate.
+         *
+         * @param rate in Hz.
+         */
+        void sample_rate(PhaseAcc::phase_t rate);
+
+        /**
+         * @brief Add a modulator.
+         *
+         * Store a reference to a modulator that will be used to
+         * modulate the output of this operator.
+         *
+         * @param op A reference to the modulating operator.
+         * @param amp Optionally, the amplitude of the modulating
+         * signal.
+         */
+        void add_modulator(const Operator& op, PhaseAcc::amp_t amp = 1.);
+
+        /**
+         * @brief Remove modulators.
+         *
+         * Clear the list of modulators connected to this
+         * operator.
+         */
+        void clear_modulators();
+
     private:
-        double frq = 440.;
-        double frq_offset = 0.;
-        double rtio = 1.;
-        double vibr_freq = 0.;
-        double vibr_amp = 0.;
+        void reset_frq();
+
+        static constexpr PhaseAcc::phase_t DEFAULT_SR = 48000;
+
+        struct Mod {
+            const Operator* const mod;
+            PhaseAcc::amp_t amp = 1.0;
+        };
+
+        Frequency frq = 440.;
+        Frequency frq_offset = 0.;
+        Frequency rtio = 1;
+        PhaseAcc phase = {frq, DEFAULT_SR};
         double ndx = 1.;
+        PhaseAcc vibr = {1, DEFAULT_SR};
+        std::vector<Mod> mods = {};
+        bool vibr_on = false;
     };
 }
 

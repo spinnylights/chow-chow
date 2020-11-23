@@ -11,6 +11,7 @@ add_executable(unit
                amp.cpp
                wav_file.cpp
                operators.cpp
+               phase_acc.cpp
                ${HEADER_LIST}
                )
 

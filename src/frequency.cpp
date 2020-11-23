@@ -8,43 +8,43 @@
 
 using F = ChowChow::Frequency;
 
-void freq_arg_err(const std::string kind, const double arg)
+template<class T>
+F::freq_t shifted_integ(T n)
 {
-    std::stringstream s;
-    s << kind << " frequencies are not permitted; you passed " << arg << " .\n";
-    throw std::invalid_argument(s.str());
+    return static_cast<F::freq_t>(n) << F::FREQ_FRAC_BITS;
 }
 
-void freq_arg_sat(const std::string kind, const double lim, double& arg)
+F::Frequency(double frq)
 {
+    double integ;
+    double frac = std::modf(frq, &integ);
 
-    std::cerr << "WARNING: The " << kind << " supported frequency is " << lim
-              << "; you passed " << arg << ". "
-              << "Saturating at " << lim << ".\n";
-    arg = lim;
+    f = shifted_integ(integ) + static_cast<freq_t>(MAX_FRAC * frac);
 }
 
-F::Frequency(double frq) { freq(frq); }
-
-double F::freq() const
+F::Frequency(unsigned int fr)
 {
-    return static_cast<double>(i) + frac_f();
+    f = shifted_integ(fr);
 }
 
-double F::frac_f() const
+double F::make_double() const
 {
-   return static_cast<double>(f) / FREQ_MAX;
+    return static_cast<double>(intg())
+           + (static_cast<double>(frac()) / MAX_FRAC);
 }
 
-void F::freq(double frq)
+F& F::operator*=(Frequency fr)
 {
-    if (std::isnan(frq)) { freq_arg_err("NaN", frq); }
-    if (frq > FREQ_MAX) { freq_arg_sat("max", FREQ_MAX, frq); }
-    if (frq < FREQ_MIN) { freq_arg_sat("min", FREQ_MIN, frq); }
+    f = (static_cast<__uint128_t>(f) * static_cast<__uint128_t>(fr.raw()))
+        >> FREQ_FRAC_BITS;
 
-    double ipart;
-    const double fpart = std::modf(frq, &ipart);
+    return *this;
+}
 
-    i = static_cast<freq_t>(ipart);
-    f = static_cast<freq_t>(std::round(fpart * FREQ_MAX));
+F& F::operator/=(Frequency fr)
+{
+    f = (static_cast<__uint128_t>(f) * (static_cast<__uint128_t>(1) << FREQ_FRAC_BITS))
+        / static_cast<__uint128_t>(fr.raw());
+
+    return *this;
 }

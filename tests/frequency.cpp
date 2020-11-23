@@ -1,71 +1,63 @@
-#include <cmath>
-#include <stdexcept>
-
 #include <doctest.h>
+
+#include <cmath>
 
 #include <chow-chow/frequency.hpp>
 
 using namespace ChowChow;
 
-TEST_CASE("Frequency - integral") {
-    constexpr Frequency::freq_t i = 2034;
-    constexpr Frequency::freq_t f = 12034;
-
-    SUBCASE("init") {
-        const Frequency freq {i, f};
-
-        CHECK(freq.intg() == i);
-        CHECK(freq.frac() == f);
-    }
-
-    SUBCASE("get/set") {
-        Frequency freq;
-        freq.intg(i);
-        freq.frac(f);
-
-        CHECK(freq.intg() == i);
-        CHECK(freq.frac() == f);
-    }
+void comp_w_double(Frequency f, double expected)
+{
+    CHECK(std::abs(f.make_double() - expected) < 1.e-10);
 }
 
-TEST_CASE("Frequency - floating point") {
-    constexpr double i = 4920;
-    constexpr Frequency::freq_t f_int = 4923;
-    constexpr double f = static_cast<double>(f_int) / Frequency::FREQ_MAX;
-    constexpr double d = i + f;
-
-    SUBCASE("init") {
-        const Frequency frq {d};
-
-        CHECK(frq.frac() == f_int);
-        CHECK(frq.freq() == d);
-        CHECK(frq.intg() == i);
-        CHECK(frq.frac_f() == f);
-    }
-
-    SUBCASE("get/set") {
-        Frequency frq;
-        frq.freq(d);
-
-        CHECK(frq.freq() == d);
-    }
+TEST_CASE("init from double") {
+    double expected = 128.5;
+    Frequency f = expected;
+    CHECK(f.intg() == 128);
+    CHECK(f.frac() == Frequency::MAX_FRAC / 2);
+    comp_w_double(f, expected);
 }
 
-TEST_CASE("invalid freq args") {
-    Frequency frq;
+TEST_CASE("init from int") {
+    unsigned int expected = 440;
+    Frequency f = expected;
+    CHECK(f.intg() == expected);
+    CHECK(f.frac() == 0);
+}
 
-    SUBCASE("NaN") {
-        CHECK_THROWS(frq.freq(std::nan("0")));
-    }
+TEST_CASE("adding") {
+    Frequency f = 2.2;
+    Frequency g = 4.4;
+    comp_w_double(f + g, 6.6);
+}
 
-    SUBCASE("below min") {
-        frq.freq(-1923.);
-        CHECK(frq.freq() == Frequency::FREQ_MIN);
-    }
+TEST_CASE("subtracting") {
+    Frequency f = 4.4;
+    Frequency g = 2.2;
+    comp_w_double((f - g), 2.2);
+}
 
-    SUBCASE("above max") {
-        frq.freq(static_cast<double>(Frequency::FREQ_MAX) + 1302);
-        CHECK(frq.freq() == Frequency::FREQ_MAX);
-    }
+TEST_CASE("multiplying") {
+    Frequency f = 10;
+    Frequency g = 2.2;
+    comp_w_double((f * g), 22.);
+}
 
+TEST_CASE("dividing") {
+    Frequency f = 2.2;
+    Frequency g = 10;
+    comp_w_double((f / g), .22);
+}
+
+TEST_CASE("equality") {
+    Frequency f = 2.2;
+    Frequency g = 2.2;
+    CHECK(f == g);
+}
+
+TEST_CASE("inequality") {
+    Frequency f = 2.2;
+    Frequency g = 2.3;
+    CHECK(f != g);
 }

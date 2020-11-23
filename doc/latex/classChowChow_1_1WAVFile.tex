@@ -1,0 +1,116 @@
+\hypertarget{classChowChow_1_1WAVFile}{}\doxysection{Chow\+Chow\+::W\+A\+V\+File Class Reference}
+\label{classChowChow_1_1WAVFile}\index{ChowChow::WAVFile@{ChowChow::WAVFile}}
+
+
+Represents audio in R\+I\+FF W\+A\+VE format.  
+
+
+
+
+{\ttfamily \#include $<$wav\+\_\+file.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classChowChow_1_1WAVFile_a779879f3a0283dd2811a9f177a289ae0}{W\+A\+V\+File}} (const std\+::vector$<$ long double $>$ \&samples, unsigned int sample\+\_\+rate)
+\item 
+\mbox{\hyperlink{classChowChow_1_1WAVFile_aeaa1ba883da4bd94f08429d40067441e}{W\+A\+V\+File}} (std\+::vector$<$ long double $>$ \&\&samples, unsigned int sample\+\_\+rate)
+\item 
+\mbox{\Hypertarget{classChowChow_1_1WAVFile_a28aa6cfb907ba24ad41093749c21c30d}\label{classChowChow_1_1WAVFile_a28aa6cfb907ba24ad41093749c21c30d}} 
+std\+::string \mbox{\hyperlink{classChowChow_1_1WAVFile_a28aa6cfb907ba24ad41093749c21c30d}{header}} () const
+\begin{DoxyCompactList}\small\item\em The R\+I\+FF W\+A\+VE header. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classChowChow_1_1WAVFile_a54e9e415193999d0a93dedd909223193}\label{classChowChow_1_1WAVFile_a54e9e415193999d0a93dedd909223193}} 
+std\+::string \mbox{\hyperlink{classChowChow_1_1WAVFile_a54e9e415193999d0a93dedd909223193}{data}} () const
+\begin{DoxyCompactList}\small\item\em The formatted sound data. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classChowChow_1_1WAVFile_a94852b042000285c356de856a4a576f8}{write}} (std\+::filesystem\+::path path) const
+\begin{DoxyCompactList}\small\item\em Writes the whole W\+A\+VE file to disk. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classChowChow_1_1WAVFile_a932822eaba3eede8ebaa2ec2fdc64860}\label{classChowChow_1_1WAVFile_a932822eaba3eede8ebaa2ec2fdc64860}} 
+static constexpr uint32\+\_\+t {\bfseries N\+U\+M\+\_\+\+C\+H\+A\+N\+N\+E\+LS} = 2
+\item 
+\mbox{\Hypertarget{classChowChow_1_1WAVFile_a4533a0860db530289f54483b1b6e18b7}\label{classChowChow_1_1WAVFile_a4533a0860db530289f54483b1b6e18b7}} 
+static constexpr uint32\+\_\+t {\bfseries B\+I\+T\+S\+\_\+\+P\+E\+R\+\_\+\+S\+A\+M\+P\+LE} = 24
+\item 
+\mbox{\Hypertarget{classChowChow_1_1WAVFile_ac1188f2bd84c7ca66caefec66d25cf1e}\label{classChowChow_1_1WAVFile_ac1188f2bd84c7ca66caefec66d25cf1e}} 
+static constexpr uint32\+\_\+t {\bfseries B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+S\+A\+M\+P\+LE} = B\+I\+T\+S\+\_\+\+P\+E\+R\+\_\+\+S\+A\+M\+P\+LE / C\+H\+A\+R\+\_\+\+B\+IT
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Represents audio in R\+I\+FF W\+A\+VE format. 
+
+Represents audio as a 24-\/bit stereo R\+I\+FF W\+A\+VE file. Supports writing it to disk for convenience. 
+
+Definition at line 16 of file wav\+\_\+file.\+hpp.
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classChowChow_1_1WAVFile_a779879f3a0283dd2811a9f177a289ae0}\label{classChowChow_1_1WAVFile_a779879f3a0283dd2811a9f177a289ae0}} 
+\index{ChowChow::WAVFile@{ChowChow::WAVFile}!WAVFile@{WAVFile}}
+\index{WAVFile@{WAVFile}!ChowChow::WAVFile@{ChowChow::WAVFile}}
+\doxysubsubsection{\texorpdfstring{WAVFile()}{WAVFile()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily W\+A\+V\+File\+::\+W\+A\+V\+File (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ long double $>$ \&}]{samples,  }\item[{unsigned int}]{sample\+\_\+rate }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em samples} & a stereo-\/interleaved collection of samples.\\
+\hline
+{\em sample\+\_\+rate} & in Hz. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 12 of file wav\+\_\+file.\+cpp.
+
+\mbox{\Hypertarget{classChowChow_1_1WAVFile_aeaa1ba883da4bd94f08429d40067441e}\label{classChowChow_1_1WAVFile_aeaa1ba883da4bd94f08429d40067441e}} 
+\index{ChowChow::WAVFile@{ChowChow::WAVFile}!WAVFile@{WAVFile}}
+\index{WAVFile@{WAVFile}!ChowChow::WAVFile@{ChowChow::WAVFile}}
+\doxysubsubsection{\texorpdfstring{WAVFile()}{WAVFile()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily W\+A\+V\+File\+::\+W\+A\+V\+File (\begin{DoxyParamCaption}\item[{std\+::vector$<$ long double $>$ \&\&}]{samples,  }\item[{unsigned int}]{sample\+\_\+rate }\end{DoxyParamCaption})}
+
+
+
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em samples} & a stereo-\/interleaved collection of samples.\\
+\hline
+{\em sample\+\_\+rate} & in Hz. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 18 of file wav\+\_\+file.\+cpp.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classChowChow_1_1WAVFile_a94852b042000285c356de856a4a576f8}\label{classChowChow_1_1WAVFile_a94852b042000285c356de856a4a576f8}} 
+\index{ChowChow::WAVFile@{ChowChow::WAVFile}!write@{write}}
+\index{write@{write}!ChowChow::WAVFile@{ChowChow::WAVFile}}
+\doxysubsubsection{\texorpdfstring{write()}{write()}}
+{\footnotesize\ttfamily void W\+A\+V\+File\+::write (\begin{DoxyParamCaption}\item[{std\+::filesystem\+::path}]{path }\end{DoxyParamCaption}) const}
+
+
+
+Writes the whole W\+A\+VE file to disk. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em path} & the location to write to (including the filename). \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 101 of file wav\+\_\+file.\+cpp.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/zoe/ganymede/code/cpp/chow-\/chow/include/chow-\/chow/wav\+\_\+file.\+hpp\item 
+/home/zoe/ganymede/code/cpp/chow-\/chow/src/wav\+\_\+file.\+cpp\end{DoxyCompactItemize}

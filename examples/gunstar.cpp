@@ -11,6 +11,14 @@ using namespace ChowChow;
 
 int main(void)
 {
+    constexpr size_t SAMPLE_RATE = 48000;
+    constexpr size_t OVERSAMPLING = 4;
+    constexpr size_t LENGTH_SECS = 20;
+
+    constexpr size_t RATE = SAMPLE_RATE * OVERSAMPLING;
+    constexpr size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
+    constexpr size_t OVERSAMP_LENGTH = LENGTH * OVERSAMPLING;
+
     const double freq = 73.42; // ~d2
 
     /*      |-|
@@ -20,14 +28,23 @@ int main(void)
      */
 
     const double vib_frq = 10;
-    const double vib_amp = 1.;
+    const double vib_amp = 2.;
 
-    Operators<4> ops;
+    Operators<5> ops;
+
+    ops.sample_rate(RATE);
+
+    ops[5].freq(freq);
+    ops[5].ratio(1.);
+    ops[5].freq_offset(-.912);
+    //ops[5].vibrato_freq(vib_frq);
+    //ops[5].vibrato_amp(vib_amp);
 
     ops[4].freq(freq);
+    ops[4].ratio(1.);
     ops[4].freq_offset(-.912);
-    ops[4].vibrato_freq(vib_frq);
-    ops[4].vibrato_amp(vib_amp);
+    //ops[4].vibrato_freq(vib_frq);
+    //ops[4].vibrato_amp(vib_amp);
 
     ops[3].freq(freq);
     ops[3].freq_offset(-.801);
@@ -47,23 +64,14 @@ int main(void)
     ops[1].vibrato_freq(vib_frq * (1. - (1. / 3.192)));
     ops[1].vibrato_amp(vib_amp * 0.512);
 
-    ops.connect(4, 4);
-    ops.connect(4, 3);
-    ops.connect(4, 2);
-    ops.connect(4, 1);
-    ops.reorder();
+    ops.connect(5, 4);
+    //ops.connect(4, 3, 1.87);
+    //ops.connect(4, 2, 1.87);
+    //ops.connect(4, 1, 1.87);
 
     ops.output(3);
     ops.output(2);
     ops.output(1);
-
-    constexpr size_t SAMPLE_RATE = 48000;
-    constexpr size_t OVERSAMPLING = 4;
-    constexpr size_t LENGTH_SECS = 20;
-
-    constexpr size_t RATE = SAMPLE_RATE * OVERSAMPLING;
-    constexpr size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
-    constexpr size_t OVERSAMP_LENGTH = LENGTH * OVERSAMPLING;
 
     const std::vector<double> envelope = [&]{
         std::vector<double> e;
@@ -113,7 +121,27 @@ int main(void)
         return e;
     }();
 
-    std::vector<long double> samples;
+    const std::vector<double> fast_ramp = [&]{
+        std::vector<double> e;
+
+        const size_t len = OVERSAMP_LENGTH;
+        const size_t frac = 275;
+        const size_t up = len/frac;
+        const size_t down = len - up;
+
+        for (size_t i = 0; i < up; ++i) {
+            const double x = static_cast<double>(i) / up;
+            e.push_back(x);
+        }
+
+        for (size_t i = 0; i < down; ++i) {
+            const double x = static_cast<double>(i) / down;
+            e.push_back(std::exp(-30.2 * x));
+        }
+
+        return e;
+    }();
+    std::vector<double> samples;
 
     std::array<double, OVERSAMPLING> oversample_win;
 
@@ -123,16 +151,36 @@ int main(void)
 
             const double theta = static_cast<double>(sample_n) / RATE;
 
-            ops[4].index(5.969 * ramp[i]);
-            ops[3].index(8.231 * ramp[i]);
-            ops[2].index(8.231 * ramp[i]);
-            ops[1].index(20.96 * ramp[i]);
+            ops[5].index(0.0018 * fast_ramp[i]);
+            ops[4].index(5.5969 * ramp[i]);
+            ops[3].index(3.231 * envelope[i]);
+            ops[2].index(5.231 * envelope[i]);
+            ops[1].index(20.96 * envelope[i]);
 
-            ops.connect(4, 3, 1.87 * ramp[i]);
-            ops.connect(4, 2, 1.87 * ramp[i]);
-            ops.connect(4, 1, 1.87 * ramp[i]);
+            //ops[4].clear_modulators();
+            ops[3].clear_modulators();
+            ops[2].clear_modulators();
+            ops[1].clear_modulators();
 
-            oversample_win[j] = ops.sig(theta) * envelope[i];
+            //ops.connect(4, 4, 0.0000059);
+            ops.connect(4, 3, 3.87 * envelope[i]);
+            ops.connect(4, 2, 1.87 * envelope[i]);
+            ops.connect(4, 1, 2.87 * envelope[i]);
+            //ops.connect(4, 3, 0.0087 * ramp[i]);
+            //ops.connect(4, 2, 0.0087 * ramp[i]);
+            //ops.connect(4, 1, 0.0087 * ramp[i]);
+            //ops.connect(4, 4, 0.00001);
+            //ops.connect(4, 3, 0.0087);
+            //ops.connect(4, 3, 0.001);
+            //ops.connect(4, 2, 0.0087);
+            //ops.connect(4, 1, 0.0087);
+            //ops.connect(4, 3);
+            //ops.connect(4, 2);
+            //ops.connect(4, 1);
+
+            oversample_win[j] = ops.sig() * envelope[i];
+
+            ops.advance();
         }
         i += OVERSAMPLING;
 
@@ -176,7 +224,7 @@ int main(void)
         r_chan_2[i + offset_3] = samples[i] * r_chan_2_amp;
     }
 
-    std::vector<long double> out;
+    std::vector<double> out;
     for (size_t i = 0; i < LEN_TOTAL; ++i) {
         const auto l = l_chan_1[i] + l_chan_2[i];
         const auto r = r_chan_1[i] + r_chan_2[i];
