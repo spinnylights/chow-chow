@@ -9,7 +9,7 @@ using namespace ChowChow;
 int main(void)
 {
     constexpr size_t SAMPLE_RATE = 48000;
-    constexpr size_t LENGTH_SECS = 4;
+    constexpr size_t LENGTH_SECS = 8;
     constexpr size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
 
     Operators<2> ops;
@@ -21,7 +21,7 @@ int main(void)
 
     ops[2].ratio(2.0);
 
-    ops.connect(2, 1, 12.);
+    ops.connect(2, 1, 12./2);
     //ops.connect(1, 2);
 
     ops.output(1);
@@ -33,7 +33,7 @@ int main(void)
 
         for (size_t i = 0; i < LENGTH; ++i) {
             const double x = static_cast<double>(i) / LENGTH;
-            e.push_back(std::exp(-8.2 * x));
+            e.push_back(1.0 - x);
         }
 
         return e;
@@ -42,12 +42,12 @@ int main(void)
     const std::vector<double> env = [&]{
         std::vector<double> e;
 
-        for (size_t i = 0; i < LENGTH/2; ++i) {
+        for (size_t i = 0; i < LENGTH*4/5; ++i) {
             e.push_back(1.0);
         }
 
-        for (size_t i = 0; i < LENGTH/2; ++i) {
-            const double x = static_cast<double>(i) / (LENGTH/2);
+        for (size_t i = 0; i < LENGTH/5; ++i) {
+            const double x = static_cast<double>(i) / (LENGTH/5);
             e.push_back(1.0 - x);
         }
 

@@ -17,3 +17,5 @@ setup(gunstar)
 setup(sine)
 
 setup(two_op)
+
+setup(feedback)
