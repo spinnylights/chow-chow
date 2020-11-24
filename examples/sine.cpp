@@ -16,9 +16,13 @@ int main(void)
 
     ops.sample_rate(SAMPLE_RATE);
 
-    ops[1].freq(440.);
+    ops[1].freq(240.);
+    ops[1].vibrato_freq(8);
+    ops[1].vibrato_amp(5.0);
 
     ops.output(1);
+
+    ops.reorder();
 
     std::vector<double> out;
 

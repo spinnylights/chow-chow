@@ -16,27 +16,39 @@ int main(void)
 
     ops.sample_rate(SAMPLE_RATE);
 
-    ops[2].freq(100.);
-    ops[1].freq(100.);
+    ops[2].freq(200.);
+    ops[1].freq(200.);
 
     ops[2].ratio(2.0);
 
-    ops.connect(2, 1);
+    ops.connect(2, 1, 12.);
     //ops.connect(1, 2);
 
     ops.output(1);
 
+    ops.reorder();
+
     const std::vector<double> ramp = [&]{
         std::vector<double> e;
 
-        const size_t len = LENGTH;
-        const size_t frac = 275;
-        const size_t up = len/frac;
-        const size_t down = len;
+        for (size_t i = 0; i < LENGTH; ++i) {
+            const double x = static_cast<double>(i) / LENGTH;
+            e.push_back(std::exp(-8.2 * x));
+        }
 
-        for (size_t i = 0; i < len; ++i) {
-            const double x = static_cast<double>(i) / len;
-            e.push_back(std::exp(-5.2 * x));
+        return e;
+    }();
+
+    const std::vector<double> env = [&]{
+        std::vector<double> e;
+
+        for (size_t i = 0; i < LENGTH/2; ++i) {
+            e.push_back(1.0);
+        }
+
+        for (size_t i = 0; i < LENGTH/2; ++i) {
+            const double x = static_cast<double>(i) / (LENGTH/2);
+            e.push_back(1.0 - x);
         }
 
         return e;
@@ -45,9 +57,9 @@ int main(void)
     std::vector<double> out;
 
     for (std::size_t i = 0; i < LENGTH; ++i) {
-        ops[2].index(1.0*ramp[i]);
+        ops[2].index(ramp[i]);
 
-        const auto sig = ops.sig();
+        const auto sig = ops.sig() * env[i];
 
         out.push_back(sig);
         out.push_back(sig);

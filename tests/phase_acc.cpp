@@ -31,3 +31,19 @@ TEST_CASE("simple advancing") {
         advance();
     }
 }
+
+TEST_CASE("advancing with modulator") {
+    static const Frequency fr = 8;
+    static const PhaseAcc::phase_t sr = 64;
+
+    PhaseAcc p = {fr, sr};
+
+    CHECK(p.amp() == 0.);
+
+    CHECK(p.amp(1.0) == 1.0);
+
+    p.advance();
+
+    CHECK(p.amp(0.5) == 1.0);
+    CHECK(p.amp(-0.5) - 0.0 < 1e-15);
+}

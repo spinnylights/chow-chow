@@ -6,33 +6,39 @@
 
 using namespace ChowChow;
 
+double Operator::sig(double mod) const
+{
+    //if (vibr_on) {
+    //    return phase_acc.amp(vibr.amp() + mod);
+    //} else {
+        return phase_acc.amp(mod);
+    //}
+}
+
 double Operator::sig() const
 {
-    auto amp = phase.amp();
-
-    //for (const auto& m : mods) {
-    //    amp *= m.mod->sig() * m.amp;
+    //if (vibr_on) {
+    //    return phase_acc.amp(vibr.amp());
+    //} else {
+        return phase_acc.amp();
     //}
-
-    return amp;
 }
 
 void Operator::advance()
 {
     if (vibr_on) {
-        phase.advance(vibr);
+        //const auto frq_base = (frq + vibr.amp()) * rtio;
+        //phase_acc.frequency(frq_base + frq_offset);
+        phase_acc.advance(vibr);
+        vibr.advance();
     } else {
-        phase.advance();
-    }
-
-    for (const auto& m : mods) {
-        phase += m.mod->sig() * m.amp;
+        phase_acc.advance();
     }
 }
 
 void Operator::reset_frq()
 {
-    phase.frequency((frq + frq_offset) * rtio);
+    phase_acc.frequency((frq + frq_offset) * rtio);
 }
 
 void Operator::freq(double n)
@@ -44,6 +50,7 @@ void Operator::freq(double n)
 void Operator::freq_offset(double n)
 {
     frq_offset = n * 0.001;
+    //frq_offset = n * 0.1;
     reset_frq();
 }
 
@@ -63,27 +70,20 @@ void Operator::vibrato_amp(double n)
     if (n == 0.) {
         vibr_on = false;
     } else {
-        vibr_on = true;
-        vibr.output_amp(n * 0.0001);
+        if (!vibr_on) {
+            vibr_on = true;
+            vibr.reset_phase();
+        }
+        vibr.output_amp(n * 10);
     }
 }
 
 void Operator::index(double n)
 {
-    phase.output_amp(n / 100.);
+    phase_acc.output_amp(n);
 }
 
 void Operator::sample_rate(PhaseAcc::phase_t rate)
 {
-    phase.sample_rate(rate);
-}
-
-void Operator::add_modulator(const Operator& op, PhaseAcc::amp_t amp)
-{
-    mods.push_back({&op, amp});
-}
-
-void Operator::clear_modulators()
-{
-    mods.clear();
+    phase_acc.sample_rate(rate);
 }

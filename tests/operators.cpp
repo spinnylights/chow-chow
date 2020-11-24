@@ -36,9 +36,13 @@ TEST_CASE("simple sig") {
     ops.connect(2, 1);
     ops.output(1);
 
-    const double time = 0.539;
-    const auto sig = ops.sig();
-    CHECK(sig == ops.check_sig(1));
+    ops.reorder();
+
+    CHECK(ops.sig() == 0.);
+
+    ops.advance();
+
+    CHECK(std::abs(ops.sig() - 0.) > 1e-10);
     CHECK(ops[2].sig() == ops.check_sig(2));
     CHECK(ops[1].sig() == ops.check_sig(1));
 }

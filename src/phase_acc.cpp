@@ -26,7 +26,7 @@ void P::sample_rate(phase_t sr)
     phase_incr(f, sr);
 }
 
-P::amp_t P::amp() const
+P::amp_t P::amp(phase_t phase) const
 {
     static constexpr int NDX_BITS = 11;
     static constexpr int SMALL_NDX_BITS = 6;
@@ -35,13 +35,13 @@ P::amp_t P::amp() const
     static constexpr uint64_t MAX_FRAC = 140737488355327;
     static constexpr double ONED_MAX_FRAC = 1./MAX_FRAC;
 
-    const uint64_t sinndx = ph >> FRAC_BITS_P_SMALL_NDX_BITS;
+    const uint64_t sinndx = phase >> FRAC_BITS_P_SMALL_NDX_BITS;
     const uint64_t cosndx = (sinndx + 512) & 2047;
 
     const auto sinn = SINE_TAB[sinndx];
     const auto cosn = SINE_TAB[cosndx];
 
-    const uint64_t small_ndx = (ph >> FRAC_BITS) & SMALL_TAB_LAST;
+    const uint64_t small_ndx = (phase >> FRAC_BITS) & SMALL_TAB_LAST;
 
     const double fracsin_0 = SINE_SMALL_TAB[small_ndx];
     const double fraccos_0 = COS_SMALL_TAB[small_ndx];
@@ -55,35 +55,34 @@ P::amp_t P::amp() const
         fraccos_1 = COS_SMALL_TAB[small_ndx_1];
     }
 
-    const double frac = static_cast<double>(ph & MAX_FRAC) * ONED_MAX_FRAC;
+    const double frac = static_cast<double>(phase & MAX_FRAC) * ONED_MAX_FRAC;
     const double fracsin = fracsin_0 + (fracsin_1 - fracsin_0)*frac;
     const double fraccos = fraccos_0 + (fraccos_1 - fraccos_0)*frac;
 
     return (sinn*fraccos + cosn*fracsin) * out_amp;
 }
 
-void P::advance() { ph += phase_inc; }
-
-void P::advance(PhaseAcc& vibrato)
+P::amp_t P::amp() const
 {
-    advance();
-    operator+=(vibrato);
-    vibrato.advance();
+    return amp(ph);
 }
 
-P& P::operator+=(amp_t a)
+P::amp_t P::amp(double mod) const
 {
     const uint_fast8_t bottom_bit = ph & 1;
     phase_t signed_scale_ph = ph >> 1;
 
-    signed_scale_ph += static_cast<phase_t_signed>(a*(TAU_SIGNED/4));
+    signed_scale_ph += static_cast<phase_t_signed>(mod*PI_2_SIGNED);
 
-    ph = (signed_scale_ph << 1) + bottom_bit;
+    const phase_t adj_ph = (signed_scale_ph << 1) + bottom_bit;
 
-    return *this;
+    return amp(adj_ph);
 }
 
-P& P::operator+=(const PhaseAcc& w)
+void P::advance() { ph += phase_inc; }
+
+void P::advance(const PhaseAcc& vibr)
 {
-    return operator+=(w.amp());
+    advance();
+    ph += static_cast<phase_t_signed>(vibr.amp() * PI_2_SIGNED / sample_r);
 }

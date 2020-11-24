@@ -15,23 +15,25 @@ namespace ChowChow {
 
         static constexpr phase_t TAU = UINT64_MAX;
         static constexpr double TAU_SIGNED = static_cast<double>(INT64_MAX);
+        static constexpr double PI_2_SIGNED = static_cast<double>(INT64_MAX/4 + 1);
 
         PhaseAcc(Frequency rate, phase_t sample_rate);
 
         phase_t phase() const { return ph; }
         phase_t phase_incr() const { return phase_inc; }
         amp_t amp() const;
+        amp_t amp(phase_t phase) const;
+        amp_t amp(double mod) const;
 
+        void phase(phase_t p) { ph = p; }
+        void reset_phase() { ph = 0; }
         void frequency(Frequency rate);
         void sample_rate(phase_t sample_rate);
         void phase_incr(Frequency rate, phase_t sample_rate);
         void output_amp(amp_t n) { out_amp = n; }
 
         void advance();
-        void advance(PhaseAcc& vibrato);
-
-        PhaseAcc& operator+=(const PhaseAcc& w);
-        PhaseAcc& operator+=(amp_t a);
+        void advance(const PhaseAcc& vibrato);
 
     private:
         Frequency f;
@@ -2232,9 +2234,6 @@ namespace ChowChow {
             0.999995439728943739,
         };
     };
-
-    inline PhaseAcc operator+(PhaseAcc a, const PhaseAcc& b) { return a += b; }
-    inline PhaseAcc operator+(PhaseAcc a, PhaseAcc::amp_t b) { return a += b; }
 }
 
 #endif

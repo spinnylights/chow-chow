@@ -21,8 +21,11 @@ namespace ChowChow {
         /**
          * @brief The current state of the output signal.
          *
+         * @param mod Optionally, a signal to modulate the
+         * operator by.
          */
         double sig() const;
+        double sig(double mod) const;
 
         /**
          * @brief Advance the operator by a sample.
@@ -98,43 +101,17 @@ namespace ChowChow {
          */
         void sample_rate(PhaseAcc::phase_t rate);
 
-        /**
-         * @brief Add a modulator.
-         *
-         * Store a reference to a modulator that will be used to
-         * modulate the output of this operator.
-         *
-         * @param op A reference to the modulating operator.
-         * @param amp Optionally, the amplitude of the modulating
-         * signal.
-         */
-        void add_modulator(const Operator& op, PhaseAcc::amp_t amp = 1.);
-
-        /**
-         * @brief Remove modulators.
-         *
-         * Clear the list of modulators connected to this
-         * operator.
-         */
-        void clear_modulators();
-
     private:
         void reset_frq();
 
         static constexpr PhaseAcc::phase_t DEFAULT_SR = 48000;
 
-        struct Mod {
-            const Operator* const mod;
-            PhaseAcc::amp_t amp = 1.0;
-        };
-
         Frequency frq = 440.;
         Frequency frq_offset = 0.;
         Frequency rtio = 1;
-        PhaseAcc phase = {frq, DEFAULT_SR};
+        PhaseAcc phase_acc = {frq, DEFAULT_SR};
         double ndx = 1.;
         PhaseAcc vibr = {1, DEFAULT_SR};
-        std::vector<Mod> mods = {};
         bool vibr_on = false;
     };
 }

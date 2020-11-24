@@ -27,30 +27,33 @@ int main(void)
      * [1] [2] [3]
      */
 
-    const double vib_frq = 10;
-    const double vib_amp = 2.;
+    static const double scale_fact = std::sin(M_PI/4.) * 1.05;
 
-    Operators<5> ops;
+    const double vib_frq = 40.0;
+    const double vib_amp = 4.0;
+
+    //Operators<5> ops;
+    Operators<4> ops;
 
     ops.sample_rate(RATE);
 
-    ops[5].freq(freq);
-    ops[5].ratio(1.);
-    ops[5].freq_offset(-.912);
+    //ops[5].freq(freq);
+    //ops[5].ratio(1.);
+    //ops[5].freq_offset(-.912);
     //ops[5].vibrato_freq(vib_frq);
     //ops[5].vibrato_amp(vib_amp);
 
     ops[4].freq(freq);
-    ops[4].ratio(1.);
+    ops[4].ratio(1.0);
     ops[4].freq_offset(-.912);
-    //ops[4].vibrato_freq(vib_frq);
-    //ops[4].vibrato_amp(vib_amp);
+    ops[4].vibrato_freq(vib_frq);
+    ops[4].vibrato_amp(vib_amp);
 
     ops[3].freq(freq);
     ops[3].freq_offset(-.801);
-    ops[3].ratio(2.);
-    ops[3].vibrato_freq(vib_frq * 1.002);
-    ops[3].vibrato_amp(vib_amp);
+    ops[3].ratio(2.0);
+    ops[3].vibrato_freq(vib_frq * 0.882);
+    ops[3].vibrato_amp(vib_amp * 0.5);
 
     ops[2].freq(freq);
     ops[2].freq_offset(.648);
@@ -61,17 +64,21 @@ int main(void)
     ops[1].freq(freq);
     ops[1].freq_offset(-.763);
     ops[1].ratio(5.);
-    ops[1].vibrato_freq(vib_frq * (1. - (1. / 3.192)));
-    ops[1].vibrato_amp(vib_amp * 0.512);
+    //ops[1].vibrato_freq(vib_frq * (1. - (1. / 3.192)));
+    ops[1].vibrato_freq(vib_frq);
+    ops[1].vibrato_amp(vib_amp * 1.25);
 
-    ops.connect(5, 4);
-    //ops.connect(4, 3, 1.87);
-    //ops.connect(4, 2, 1.87);
-    //ops.connect(4, 1, 1.87);
+    //ops.connect(5, 4);
+    ops.connect(4, 4);
+    //ops.connect(4, 3);
+    ops.connect(4, 2);
+    ops.connect(4, 1);
 
     ops.output(3);
     ops.output(2);
     ops.output(1);
+
+    ops.reorder();
 
     const std::vector<double> envelope = [&]{
         std::vector<double> e;
@@ -104,7 +111,29 @@ int main(void)
         std::vector<double> e;
 
         const size_t len = OVERSAMP_LENGTH;
-        const size_t frac = 275;
+        const size_t down = len;
+        //const size_t frac = 275;
+        //const size_t up = len/frac;
+        //const size_t down = len - up;
+
+        //for (size_t i = 0; i < up; ++i) {
+        //    const double x = static_cast<double>(i) / up;
+        //    e.push_back(x);
+        //}
+
+        for (size_t i = 0; i < down; ++i) {
+            const double x = static_cast<double>(i) / down;
+            e.push_back(std::exp(-1.2 * x));
+        }
+
+        return e;
+    }();
+
+    const std::vector<double> fast_ramp = [&]{
+        std::vector<double> e;
+
+        const size_t len = OVERSAMP_LENGTH;
+        const size_t frac = 375;
         const size_t up = len/frac;
         const size_t down = len - up;
 
@@ -120,63 +149,26 @@ int main(void)
 
         return e;
     }();
-
-    const std::vector<double> fast_ramp = [&]{
-        std::vector<double> e;
-
-        const size_t len = OVERSAMP_LENGTH;
-        const size_t frac = 275;
-        const size_t up = len/frac;
-        const size_t down = len - up;
-
-        for (size_t i = 0; i < up; ++i) {
-            const double x = static_cast<double>(i) / up;
-            e.push_back(x);
-        }
-
-        for (size_t i = 0; i < down; ++i) {
-            const double x = static_cast<double>(i) / down;
-            e.push_back(std::exp(-30.2 * x));
-        }
-
-        return e;
-    }();
     std::vector<double> samples;
 
     std::array<double, OVERSAMPLING> oversample_win;
 
     for (size_t i = 0; i < OVERSAMP_LENGTH; (void)0) {
         for (size_t j = 0; j < OVERSAMPLING; ++j) {
-            const auto sample_n = i + j;
+            ops[4].index(5.6 * scale_fact * fast_ramp[i]);
+            ops[3].index(8.231 * scale_fact * fast_ramp[i]);
+            ops[2].index(8.231 * scale_fact * fast_ramp[i]);
+            ops[1].index(20 * scale_fact * fast_ramp[i]);
 
-            const double theta = static_cast<double>(sample_n) / RATE;
+            ops.connect(4, 4, scale_fact);
+            ops.connect(4, 3, 1.87 * fast_ramp[i]);
+            ops.connect(4, 2, 1.87 * fast_ramp[i]);
+            ops.connect(4, 1, 1.87 * fast_ramp[i]);
 
-            ops[5].index(0.0018 * fast_ramp[i]);
-            ops[4].index(5.5969 * ramp[i]);
-            ops[3].index(3.231 * envelope[i]);
-            ops[2].index(5.231 * envelope[i]);
-            ops[1].index(20.96 * envelope[i]);
-
-            //ops[4].clear_modulators();
-            ops[3].clear_modulators();
-            ops[2].clear_modulators();
-            ops[1].clear_modulators();
-
-            //ops.connect(4, 4, 0.0000059);
-            ops.connect(4, 3, 3.87 * envelope[i]);
-            ops.connect(4, 2, 1.87 * envelope[i]);
-            ops.connect(4, 1, 2.87 * envelope[i]);
-            //ops.connect(4, 3, 0.0087 * ramp[i]);
-            //ops.connect(4, 2, 0.0087 * ramp[i]);
-            //ops.connect(4, 1, 0.0087 * ramp[i]);
-            //ops.connect(4, 4, 0.00001);
-            //ops.connect(4, 3, 0.0087);
-            //ops.connect(4, 3, 0.001);
-            //ops.connect(4, 2, 0.0087);
-            //ops.connect(4, 1, 0.0087);
-            //ops.connect(4, 3);
-            //ops.connect(4, 2);
-            //ops.connect(4, 1);
+            //ops[4].vibrato_amp(vib_amp * fast_ramp[i]);
+            //ops[3].vibrato_amp(vib_amp * fast_ramp[i]);
+            //ops[2].vibrato_amp(vib_amp * fast_ramp[i]);
+            //ops[1].vibrato_amp(vib_amp * fast_ramp[i]);
 
             oversample_win[j] = ops.sig() * envelope[i];
 
@@ -235,7 +227,7 @@ int main(void)
     }
 
     const auto max = std::max_element(out.begin(), out.end());
-    const double norm_div = 0.95 / *max;
+    const double norm_div = 0.85 / *max;
     for (auto &x : out) {
         x *= norm_div;
     }
