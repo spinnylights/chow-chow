@@ -2,6 +2,7 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
+#include <array>
 
 #include "chow-chow/operators.hpp"
 #include "chow-chow/constants.hpp"
@@ -9,68 +10,55 @@
 
 using namespace ChowChow;
 
-int main(void)
+static constexpr std::size_t SAMPLE_RATE = 48000;
+static constexpr std::size_t OVERSAMPLING = 4;
+static constexpr std::size_t LENGTH_SECS = 20;
+
+static constexpr std::size_t RATE = SAMPLE_RATE * OVERSAMPLING;
+static constexpr std::size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
+static constexpr std::size_t OVERSAMP_LENGTH = LENGTH * OVERSAMPLING;
+
+static constexpr double FREQ = 73.42; // ~d2
+
+static constexpr double VIB_FRQ = 40.0;
+static constexpr double VIB_AMP = 15.25;
+
+void set_up_ops(Operators<4>& ops)
 {
-    constexpr size_t SAMPLE_RATE = 48000;
-    constexpr size_t OVERSAMPLING = 4;
-    constexpr size_t LENGTH_SECS = 20;
-
-    constexpr size_t RATE = SAMPLE_RATE * OVERSAMPLING;
-    constexpr size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
-    constexpr size_t OVERSAMP_LENGTH = LENGTH * OVERSAMPLING;
-
-    const double freq = 73.42; // ~d2
-
     /*      |-|
      *     [4]-
      *  |---|---|
      * [1] [2] [3]
      */
 
-    static const double scale_fact = std::sin(M_PI/4.) * 1.05;
-
-    const double vib_frq = 40.0;
-    const double vib_amp = 4.0;
-
-    //Operators<5> ops;
-    Operators<4> ops;
-
     ops.sample_rate(RATE);
 
-    //ops[5].freq(freq);
-    //ops[5].ratio(1.);
-    //ops[5].freq_offset(-.912);
-    //ops[5].vibrato_freq(vib_frq);
-    //ops[5].vibrato_amp(vib_amp);
-
-    ops[4].freq(freq);
+    ops[4].freq(FREQ);
     ops[4].ratio(1.0);
     ops[4].freq_offset(-.912);
-    ops[4].vibrato_freq(vib_frq);
-    ops[4].vibrato_amp(vib_amp);
+    ops[4].vibrato_freq(VIB_FRQ);
+    ops[4].vibrato_amp(VIB_AMP);
 
-    ops[3].freq(freq);
+    ops[3].freq(FREQ);
     ops[3].freq_offset(-.801);
     ops[3].ratio(2.0);
-    ops[3].vibrato_freq(vib_frq * 0.882);
-    ops[3].vibrato_amp(vib_amp * 0.5);
+    ops[3].vibrato_freq(VIB_FRQ * 0.882);
+    ops[3].vibrato_amp(VIB_AMP * 0.5);
 
-    ops[2].freq(freq);
+    ops[2].freq(FREQ);
     ops[2].freq_offset(.648);
     ops[2].ratio(0.5);
-    ops[2].vibrato_freq(vib_frq * 0.998);
-    ops[2].vibrato_amp(vib_amp);
+    ops[2].vibrato_freq(VIB_FRQ * 0.998);
+    ops[2].vibrato_amp(VIB_AMP);
 
-    ops[1].freq(freq);
+    ops[1].freq(FREQ);
     ops[1].freq_offset(-.763);
     ops[1].ratio(5.);
-    //ops[1].vibrato_freq(vib_frq * (1. - (1. / 3.192)));
-    ops[1].vibrato_freq(vib_frq);
-    ops[1].vibrato_amp(vib_amp * 1.25);
+    ops[1].vibrato_freq(VIB_FRQ * (1. - (1. / 3.192)));
+    ops[1].vibrato_amp(VIB_AMP * 0.512);
 
-    //ops.connect(5, 4);
     ops.connect(4, 4);
-    //ops.connect(4, 3);
+    ops.connect(4, 3);
     ops.connect(4, 2);
     ops.connect(4, 1);
 
@@ -79,96 +67,89 @@ int main(void)
     ops.output(1);
 
     ops.reorder();
+}
 
-    const std::vector<double> envelope = [&]{
-        std::vector<double> e;
+void make_envelope(std::vector<double>& e)
+{
+    const size_t len = OVERSAMP_LENGTH;
+    const size_t frac = 275;
+    const size_t up = len/frac;
+    const size_t down = len - up;
 
-        const size_t len = OVERSAMP_LENGTH;
-        const size_t frac = 275;
-        const size_t up = len/frac;
-        const size_t down = len - up;
+    for (size_t i = 0; i < up; ++i) {
+        const double x = static_cast<double>(i) / up;
+        e.push_back(x);
+    }
 
-        for (size_t i = 0; i < up; ++i) {
-            const double x = static_cast<double>(i) / up;
-            e.push_back(x);
-        }
+    for (size_t i = 0; i < down; ++i) {
+        const double shape = 2.;
+        const double x = static_cast<double>(i*shape) / down;
+        const double point =
+            1.0
+            + (-1.0
+               * (1.0 - std::exp(x))
+               / (1.0 - std::exp(shape)));
+        e.push_back(point);
+    }
+}
 
-        for (size_t i = 0; i < down; ++i) {
-            const double shape = 2.;
-            const double x = static_cast<double>(i*shape) / down;
-            const double point =
-                1.0
-                + (-1.0
-                   * (1.0 - std::exp(x))
-                   / (1.0 - std::exp(shape)));
-            e.push_back(point);
-        }
+void make_ramp(std::vector<double>& r)
+{
+    const size_t len = OVERSAMP_LENGTH;
+    const size_t frac = 375;
+    const size_t up = len/frac;
+    const size_t down = len - up;
 
-        return e;
-    }();
+    for (size_t i = 0; i < up; ++i) {
+        const double x = static_cast<double>(i) / up;
+        r.push_back(x);
+    }
 
-    const std::vector<double> ramp = [&]{
-        std::vector<double> e;
+    for (size_t i = 0; i < down; ++i) {
+        const double x = static_cast<double>(i) / down;
+        r.push_back(std::exp(-1.2 * x));
+    }
+}
 
-        const size_t len = OVERSAMP_LENGTH;
-        const size_t down = len;
-        //const size_t frac = 275;
-        //const size_t up = len/frac;
-        //const size_t down = len - up;
+void run_synth(std::vector<double>& samples)
+{
+    Operators<4> ops;
+    set_up_ops(ops);
 
-        //for (size_t i = 0; i < up; ++i) {
-        //    const double x = static_cast<double>(i) / up;
-        //    e.push_back(x);
-        //}
+    std::vector<double> envelope;
+    make_envelope(envelope);
 
-        for (size_t i = 0; i < down; ++i) {
-            const double x = static_cast<double>(i) / down;
-            e.push_back(std::exp(-1.2 * x));
-        }
-
-        return e;
-    }();
-
-    const std::vector<double> fast_ramp = [&]{
-        std::vector<double> e;
-
-        const size_t len = OVERSAMP_LENGTH;
-        const size_t frac = 375;
-        const size_t up = len/frac;
-        const size_t down = len - up;
-
-        for (size_t i = 0; i < up; ++i) {
-            const double x = static_cast<double>(i) / up;
-            e.push_back(x);
-        }
-
-        for (size_t i = 0; i < down; ++i) {
-            const double x = static_cast<double>(i) / down;
-            e.push_back(std::exp(-1.2 * x));
-        }
-
-        return e;
-    }();
-    std::vector<double> samples;
+    std::vector<double> ramp;
+    make_ramp(ramp);
 
     std::array<double, OVERSAMPLING> oversample_win;
 
     for (size_t i = 0; i < OVERSAMP_LENGTH; (void)0) {
         for (size_t j = 0; j < OVERSAMPLING; ++j) {
-            ops[4].index(5.6 * scale_fact * fast_ramp[i]);
-            ops[3].index(8.231 * scale_fact * fast_ramp[i]);
-            ops[2].index(8.231 * scale_fact * fast_ramp[i]);
-            ops[1].index(20 * scale_fact * fast_ramp[i]);
+            static const double scale_fact = .7;
 
-            ops.connect(4, 4, scale_fact);
-            ops.connect(4, 3, 1.87 * fast_ramp[i]);
-            ops.connect(4, 2, 1.87 * fast_ramp[i]);
-            ops.connect(4, 1, 1.87 * fast_ramp[i]);
+            const double scale_fact_ramped = scale_fact * ramp[i];
+            ops[4].index(5.969 * scale_fact_ramped);
+            ops[3].index(8.231 * scale_fact_ramped);
+            ops[2].index(8.231 * scale_fact_ramped);
+            ops[1].index(20.96 * scale_fact_ramped);
 
-            //ops[4].vibrato_amp(vib_amp * fast_ramp[i]);
-            //ops[3].vibrato_amp(vib_amp * fast_ramp[i]);
-            //ops[2].vibrato_amp(vib_amp * fast_ramp[i]);
-            //ops[1].vibrato_amp(vib_amp * fast_ramp[i]);
+            const double connection_str_ramped = 1.87 * scale_fact_ramped;
+            ops.connect(4, 3, connection_str_ramped);
+            ops.connect(4, 2, connection_str_ramped);
+            ops.connect(4, 1, connection_str_ramped);
+
+            const double vib_amp_ramped = VIB_AMP - VIB_AMP * ramp[i];
+            ops[4].vibrato_amp(vib_amp_ramped);
+            ops[3].vibrato_amp(vib_amp_ramped);
+            ops[2].vibrato_amp(vib_amp_ramped);
+            ops[1].vibrato_amp(vib_amp_ramped);
+
+            const double vib_amp_ramped_prdic = vib_amp_ramped * M_PI;
+            ops[4].vibrato_freq(std::sin(vib_amp_ramped_prdic * 239) * 40 + VIB_FRQ);
+            ops[3].vibrato_freq(std::sin(vib_amp_ramped_prdic * 182) * 38 + VIB_FRQ);
+            ops[2].vibrato_freq(std::sin(vib_amp_ramped_prdic * 403) * 18 + VIB_FRQ);
+            ops[1].vibrato_freq(std::sin(vib_amp_ramped_prdic * 213) * 90 + VIB_FRQ);
 
             oversample_win[j] = ops.sig() * envelope[i];
 
@@ -184,53 +165,183 @@ int main(void)
 
         samples.push_back(sample);
     }
+}
 
-    constexpr size_t offset_1 = 0.02425 * SAMPLE_RATE;
-    constexpr size_t offset_2 = 0.01577 * SAMPLE_RATE;
-    constexpr size_t offset_3 = 0.0167 * SAMPLE_RATE;
+class Channel {
+public:
 
-    constexpr size_t LEN_TOTAL = LENGTH + offset_1;
+    Channel()
+    {}
 
-    constexpr double l_chan_1_amp = 0.197;
-    constexpr double l_chan_2_amp = 0.071;
-    constexpr double r_chan_1_amp = 0.207;
-    constexpr double r_chan_2_amp = 0.061;
-
-    std::vector<double> l_chan_1 (LEN_TOTAL, 0.);
-    for (size_t i = 0; i < samples.size(); ++i) {
-        l_chan_1[i] = samples[i] * l_chan_1_amp;
+    Channel(std::size_t sz)
+    {
+        samps.resize(sz, 0.);
     }
 
-    std::vector<double> l_chan_2 (LEN_TOTAL, 0.);
-    for (size_t i = 0; i < samples.size(); ++i) {
-        l_chan_2[i + offset_2] = samples[i] * l_chan_2_amp;
+    void write(const std::vector<double>& samples,
+               size_t offset,
+               double amp)
+    {
+        for (size_t i = 0; i < samples.size(); ++i) {
+            samps[i + offset] = samples[i] * amp;
+        }
     }
 
-    std::vector<double> r_chan_1 (LEN_TOTAL, 0.);
-    for (size_t i = 0; i < samples.size(); ++i) {
-        r_chan_1[i + offset_1] = samples[i] * r_chan_1_amp;
+    const double at(std::size_t i) const
+    {
+        return samps.at(i);
     }
 
-    std::vector<double> r_chan_2 (LEN_TOTAL, 0.);
-    for (size_t i = 0; i < samples.size(); ++i) {
-        r_chan_2[i + offset_3] = samples[i] * r_chan_2_amp;
+private:
+
+    std::vector<double> samps;
+
+};
+
+template <size_t N>
+class Offsets {
+public:
+
+    Offsets()
+        : os{}
+    {}
+
+    Offsets(const std::array<double, N>& os_prescale)
+    {
+        for (size_t i = 0; i < N; ++i) {
+            os[i] = static_cast<size_t>(os_prescale[i] * SAMPLE_RATE);
+        }
     }
 
-    std::vector<double> out;
-    for (size_t i = 0; i < LEN_TOTAL; ++i) {
-        const auto l = l_chan_1[i] + l_chan_2[i];
-        const auto r = r_chan_1[i] + r_chan_2[i];
-
-        const double cross = 0.26;
-        out.push_back(l + r*cross);
-        out.push_back(r + l*cross);
+    size_t max()
+    {
+        return *std::max_element(os.begin(), os.end());
     }
 
+    const double at(std::size_t i) const
+    {
+        return os.at(i);
+    }
+
+private:
+
+    std::array<size_t, N> os;
+};
+
+template <size_t N>
+class MonoChannels {
+public:
+
+    MonoChannels(std::size_t chnl_len)
+    {
+        for (auto& c : chnls) {
+            c = Channel(chnl_len);
+        }
+
+        std::fill(as.begin(), as.end(), 1.);
+    }
+
+    void offsets(Offsets<N> offsets) { ofs = offsets; }
+
+    void amps(std::array<double, N> a) { as = a; }
+
+    void write(const std::vector<double>& samples)
+    {
+        for (std::size_t i = 0; i < N; ++i) {
+            chnls[i].write(samples, ofs.at(i), as[i]);
+        }
+    }
+
+    const double sample(std::size_t i)
+    {
+        double s = 0.;
+
+        for (const auto& c : chnls) {
+            s += c.at(i);
+        }
+
+        return s;
+    }
+
+private:
+
+    std::array<Channel, N> chnls;
+    Offsets<N> ofs = {};
+    std::array<double, N> as;
+};
+
+template <size_t N>
+class StereoChannels {
+public:
+
+    StereoChannels(Offsets<N> l_ofs, Offsets<N> r_ofs)
+        : len{LENGTH + std::max(l_ofs.max(), r_ofs.max())},
+          left{len},
+          right{len}
+    {
+        left.offsets(l_ofs);
+        right.offsets(r_ofs);
+    }
+
+    void amps(std::array<double, N> l_a, std::array<double, N> r_a)
+    {
+        left.amps(l_a);
+        right.amps(r_a);
+    }
+
+    void write_to(std::vector<double>& out,
+                  const std::vector<double>& samps,
+                  double cross_amp)
+    {
+        left.write(samps);
+        right.write(samps);
+
+        for (std::size_t i = 0; i < len; ++i) {
+            const auto l = left.sample(i);
+            const auto r = right.sample(i);
+
+            out.push_back(l + r*cross_amp);
+            out.push_back(r + l*cross_amp);
+        }
+    }
+
+private:
+
+    size_t len;
+    MonoChannels<N> left;
+    MonoChannels<N> right;
+};
+
+void stereo_spread(std::vector<double>& out,
+                   const std::vector<double>& samples)
+{
+    static constexpr size_t CHAN_CNT = 4;
+
+    StereoChannels<CHAN_CNT/2> chans = { {{ 0, 0.01577 }},
+                                         {{ 0.02425, 0.0167 }} };
+
+    chans.amps({ 0.197, 0.071 }, { 0.207, 0.061 });
+
+    chans.write_to(out, samples, 0.26);
+}
+
+void normalize(std::vector<double>& out)
+{
     const auto max = std::max_element(out.begin(), out.end());
-    const double norm_div = 0.85 / *max;
+    const double norm_div = 0.95 / *max;
     for (auto &x : out) {
         x *= norm_div;
     }
+}
+
+int main(void)
+{
+    std::vector<double> samples;
+    run_synth(samples);
+
+    std::vector<double> out;
+    stereo_spread(out, samples);
+    normalize(out);
 
     ChowChow::WAVFile file {out, SAMPLE_RATE};
     file.write("./gunstar.wav");
