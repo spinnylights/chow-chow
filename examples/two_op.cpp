@@ -16,13 +16,13 @@ int main(void)
 
     ops.sample_rate(SAMPLE_RATE);
 
-    ops[2].freq(200.);
-    ops[1].freq(200.);
+    static constexpr double FREQ = 250.;
+    ops[2].freq(FREQ);
+    ops[1].freq(FREQ);
 
-    ops[2].ratio(2.0);
+    ops[2].ratio(3.35);
 
-    ops.connect(2, 1, 12./2);
-    //ops.connect(1, 2);
+    ops.connect(2, 1, 1.8);
 
     ops.output(1);
 
@@ -42,12 +42,14 @@ int main(void)
     const std::vector<double> env = [&]{
         std::vector<double> e;
 
-        for (size_t i = 0; i < LENGTH*4/5; ++i) {
+        const size_t full_vol = LENGTH*4/5;
+        for (size_t i = 0; i < full_vol; ++i) {
             e.push_back(1.0);
         }
 
-        for (size_t i = 0; i < LENGTH/5; ++i) {
-            const double x = static_cast<double>(i) / (LENGTH/5);
+        const size_t decay = LENGTH - full_vol;
+        for (size_t i = 0; i < decay; ++i) {
+            const double x = static_cast<double>(i) / (decay);
             e.push_back(1.0 - x);
         }
 
@@ -57,7 +59,7 @@ int main(void)
     std::vector<double> out;
 
     for (std::size_t i = 0; i < LENGTH; ++i) {
-        ops[2].index(ramp[i]);
+        ops[2].index(0.25 + ramp[i]);
 
         const auto sig = ops.sig() * env[i];
 
