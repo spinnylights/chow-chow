@@ -17,7 +17,9 @@ int main(void)
 
     ops[1].freq(200.);
 
-    ops.connect(1, 1, 1.);
+    const double cnctn_strngth = 64.;
+
+    ops.connect(1, 1, cnctn_strngth);
 
     ops.output(1);
 
@@ -27,8 +29,10 @@ int main(void)
         std::vector<double> e;
 
         for (size_t i = 0; i < LENGTH; ++i) {
-            const double x = static_cast<double>(i) / LENGTH;
-            e.push_back(1.0 - x);
+            const double curve = -2.75;
+
+            e.push_back(1 - (1. - std::exp(i*curve/(LENGTH-1.)))
+                            / (1. - std::exp(curve)));
         }
 
         return e;
@@ -52,7 +56,7 @@ int main(void)
     std::vector<double> out;
 
     for (std::size_t i = 0; i < LENGTH; ++i) {
-        ops.connect(1, 1, ramp[i]);
+        ops.connect(1, 1, cnctn_strngth*ramp[i]);
 
         const auto sig = ops.sig() * env[i];
 
