@@ -101,6 +101,11 @@ namespace ChowChow {
          */
         void sample_rate(PhaseAcc::phase_t rate);
 
+        /**
+         * @copydoc ChowChow::PhaseAcc::quality()
+         */
+        void quality(uint_fast8_t q) { phase_acc.quality(q); }
+
     private:
         void reset_frq();
 

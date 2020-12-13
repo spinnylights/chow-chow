@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <array>
+#include <functional>
 
 #include "chow-chow/frequency.hpp"
 
@@ -24,6 +25,7 @@ namespace ChowChow {
         amp_t amp() const;
         amp_t amp(phase_t phase) const;
         amp_t amp(double mod) const;
+        amp_t output_amp() const { return out_amp; };
 
         void phase(phase_t p) { ph = p; }
         void reset_phase() { ph = 0; }
@@ -32,6 +34,21 @@ namespace ChowChow {
         void phase_incr(Frequency rate, phase_t sample_rate);
         void output_amp(amp_t n) { out_amp = n; }
 
+        /**
+         * @brief The fidelity of the sine approximation.
+         *
+         * Controls the accuracy and computational intensiveness
+         * of the sine approximation function used to compute the
+         * output. Lower values are faster, but also introduce
+         * more noise into the signal, and are more prone to
+         * aliasing as a result.
+         *
+         * @param q in the range of 1–4, with 1 being
+         * roughest/fastest and 4 being purest/slowest. 3 by
+         * default.
+         */
+        void quality(uint_fast8_t q);
+
         void advance();
         void advance(const PhaseAcc& vibrato);
 
@@ -39,8 +56,19 @@ namespace ChowChow {
         Frequency f;
         phase_t sample_r;
         phase_t phase_inc = 0;
+        uint_fast8_t bottom_bit = 0;
         phase_t ph = 0;
         amp_t out_amp = 1.;
+
+        amp_t amp_sin(phase_t phase) const;
+        amp_t amp_circ(phase_t phase) const;
+        amp_t amp_linear(phase_t phase) const;
+        amp_t amp_direct(phase_t phase) const;
+
+        std::function<amp_t(phase_t)> amp_fn = [this](phase_t p)
+        {
+            return this->amp_circ(p);
+        };
 
         static constexpr std::size_t SINE_TAB_LEN = 2048;
         static constexpr std::size_t SINE_TAB_LAST = SINE_TAB_LEN - 1;

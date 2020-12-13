@@ -173,6 +173,16 @@ namespace ChowChow {
             return sum_output();
         }
 
+        /**
+         * @copydoc ChowChow::PhaseAcc::quality()
+         */
+        void quality(uint_fast8_t q)
+        {
+            for (auto& o : ops) {
+                o.quality(q);
+            }
+        }
+
     private:
         ops_col_t ops = {};
         std::array<std::array<double, N>, N> cnctns = {};
