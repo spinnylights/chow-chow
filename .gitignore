@@ -4,3 +4,7 @@ build
 *.txt
 doc/*
 !doc/Doxyfile
+*.mkv
+*.mp4
+*.ogg
+*.png
