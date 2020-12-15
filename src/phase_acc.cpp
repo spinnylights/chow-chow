@@ -33,11 +33,11 @@ void P::sample_rate(phase_t sr)
     phase_incr(f, sr);
 }
 
-P::amp_t P::amp_sin(phase_t phase) const
+double ChowChow::amp_sin(uint64_t phase)
 {
     static constexpr double TAU_U = static_cast<double>(UINT64_MAX) - 1.;
     static constexpr double TAU_F = 2*M_PI;
-    return std::sin((static_cast<double>(phase) / TAU_U) * TAU_F) * out_amp;
+    return std::sin((static_cast<double>(phase) / TAU_U) * TAU_F);
 }
 
 constexpr uint64_t max_frac(uint64_t frac_bits)
@@ -45,7 +45,7 @@ constexpr uint64_t max_frac(uint64_t frac_bits)
     return ((uint64_t)1 << frac_bits) - 1;
 }
 
-P::amp_t P::amp_linear(phase_t phase) const
+double ChowChow::amp_linear(uint64_t phase)
 {
     static constexpr uint64_t MAX_FRAC = max_frac(FRAC_BITS);
 
@@ -58,15 +58,15 @@ P::amp_t P::amp_linear(phase_t phase) const
     const auto y0  = SINE_TAB[y0ndx];
     const auto y1  = SINE_TAB[y1ndx];
 
-    return (y0 + (y1 - y0)*fract) * out_amp;
+    return (y0 + (y1 - y0)*fract);
 }
 
-P::amp_t P::amp_direct(phase_t phase) const
+double ChowChow::amp_direct(uint64_t phase)
 {
-    return SINE_TAB[phase >> FRAC_BITS] * out_amp;
+    return SINE_TAB[phase >> FRAC_BITS];
 }
 
-P::amp_t P::amp_circ(phase_t phase) const
+double ChowChow::amp_circ(uint64_t phase)
 {
     static constexpr int SMALL_NDX_BITS = 6;
     static constexpr int FRAC_BITS_P_SMALL_NDX_BITS = FRAC_BITS;
@@ -98,12 +98,12 @@ P::amp_t P::amp_circ(phase_t phase) const
     const double fracsin = fracsin_0 + (fracsin_1 - fracsin_0)*frac;
     const double fraccos = fraccos_0 + (fraccos_1 - fraccos_0)*frac;
 
-    return (sinn*fraccos + cosn*fracsin) * out_amp;
+    return (sinn*fraccos + cosn*fracsin);
 }
 
-P::amp_t P::amp(phase_t phase) const
+double P::amp(phase_t phase) const
 {
-    return amp_fn(phase);
+    return (*amp_fn)(phase) * out_amp;
 }
 
 P::amp_t P::amp() const
@@ -168,12 +168,12 @@ void P::advance(const PhaseAcc& vibr)
 void P::quality(uint_fast8_t q)
 {
     if (q >= 4) {
-        amp_fn = [this](phase_t p) { return this->amp_sin(p); };
+        amp_fn = *amp_sin;
     } else if (q == 3) {
-        amp_fn = [this](phase_t p) { return this->amp_circ(p); };
+        amp_fn = *amp_circ;
     } else if (q == 2) {
-        amp_fn = [this](phase_t p) { return this->amp_linear(p); };
+        amp_fn = *amp_linear;
     } else {
-        amp_fn = [this](phase_t p) { return this->amp_direct(p); };
+        amp_fn = *amp_direct;
     }
 }
