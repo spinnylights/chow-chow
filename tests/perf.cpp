@@ -83,17 +83,18 @@ int main(void)
 {
     Operators<10> ops;
 
-    auto before = t::steady_clock::now();
+    const auto before_setup = t::steady_clock::now();
     setup(ops);
-    auto setup_time = t::steady_clock::now() - before;
+    const auto setup_time = t::steady_clock::now() - before_setup;
 
+    // so our profiling run doesn't get optimized out
     std::array<double, LENGTH> dummy;
 
-    before = t::steady_clock::now();
+    const auto before_run = t::steady_clock::now();
     for (std::size_t i = 0; i < LENGTH; ++i) {
         dummy[i] = get_sig(ops);
     }
-    auto runtime = t::steady_clock::now() - before;
+    const auto runtime = t::steady_clock::now() - before_run;
 
     std::ofstream dev_null("/dev/null");
     dev_null << *dummy.end();
