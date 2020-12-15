@@ -111,10 +111,44 @@ P::amp_t P::amp() const
     return amp(ph);
 }
 
+union double_and_bits {
+    double d;
+    uint64_t u;
+};
+
+constexpr uint64_t double_to_bits(double x)
+{
+    return (double_and_bits){.d = x}.u;
+}
+
+constexpr double bits_to_double(uint64_t x)
+{
+    return (double_and_bits){.u = x}.d;
+}
+
+constexpr double pow2_fmod4(double x)
+{
+    uint64_t b = double_to_bits(x);
+
+    constexpr uint_fast16_t COEFF_BITS = 52;
+    constexpr uint_fast16_t EXPON_MASK = 0x7ff;
+    uint_fast16_t e = b >> COEFF_BITS & EXPON_MASK;
+
+    constexpr uint_fast16_t EXP_4_M1 = 1024;
+    e = COEFF_BITS - (e - EXP_4_M1);
+
+    b = b >> e << e;
+
+    return x - bits_to_double(b);
+}
+
 P::amp_t P::amp(double mod) const
 {
-    const phase_t scaled_mod = static_cast<phase_t>(std::fmod(mod, 4.)
-                                                    *PI_2_SIGNED);
+    if (mod > 4.0 || mod < -4.0) {
+        mod = pow2_fmod4(mod);
+    }
+
+    const phase_t scaled_mod = static_cast<phase_t>(mod * PI_2_SIGNED);
 
     const phase_t signed_scale_ph = (ph >> 1) + scaled_mod;
 
