@@ -17,3 +17,5 @@ target_compile_features(unit PUBLIC cxx_std_17)
 target_link_libraries(unit PRIVATE doctest)
 target_link_libraries(unit PUBLIC libchowchow)
 add_test(NAME unittest COMMAND unit)
+
+setup_simple_bin(perf)
