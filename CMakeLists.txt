@@ -7,6 +7,24 @@ project(Chow-Chow VERSION 0.1
                   LANGUAGES CXX
                   )
 
+file(GLOB HEADER_LIST CONFIGURE_DEPENDS
+     "${Chow-Chow_SOURCE_DIR}/include/chow-chow/*.hpp"
+     )
+
+function(setup_simple_bin exe)
+        add_executable("${exe}"
+                       "${exe}.cpp"
+                       ${HEADER_LIST}
+                       )
+
+        target_include_directories("${exe}" PUBLIC
+                                   "${Chow-Chow_SOURCE_DIR}/include"
+                                   )
+
+        target_compile_features("${exe}" PUBLIC cxx_std_17)
+        target_link_libraries("${exe}" PUBLIC libchowchow)
+endfunction()
+
 add_subdirectory(src)
 add_subdirectory(examples)
 

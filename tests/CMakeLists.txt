@@ -1,7 +1,3 @@
-file(GLOB HEADER_LIST CONFIGURE_DEPENDS
-     "${Chow-Chow_SOURCE_DIR}/include/chow-chow/*.hpp"
-     )
-
 add_executable(unit
                main.cpp
                sample.cpp
