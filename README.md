@@ -34,18 +34,30 @@ tests were run in (including hardware), and ideally a precise
 description of why your change improves performance and under
 what circumstances.
 
+There is a simple end-to-end performance test
+available under `build/tests/perf` (with the default build
+settings) that you may find convenient. It outputs timing results
+if run directly, and is suitable for running in valgrind if you
+want more detailed information.
+
 ### Style
 
 Try to stick to the coding style of [_The C++ Programming
-Language_](https://www.stroustrup.com/4th.html). I'm not
-ultra-strict about syntax; I appreciate that C++ is very flexible
-in that regard, so if you have an unusual construction that reads
-best written in an unusual way, that might be okay with me. That
-said, it's nice to keep things looking consistent if all else is
-equal, so please only deviate if you really have a good reason.
-Talking in semantic terms, I definitely think the recommendations
-in that book are worth taking, and am likely to push back against
-code that strays from them much.
+Language_](https://www.stroustrup.com/4th.html) and [_A Tour of
+C++_](https://www.stroustrup.com/tour2.html) and the like. I'm
+not ultra-strict about syntax; I appreciate that C++ is very
+flexible in that regard, so if you have an unusual construction
+that reads best written in an unusual way, that might be okay
+with me. That said, it's nice to keep things looking consistent
+if all else is equal, so please only deviate if you really have a
+good reason.
+
+Talking in semantic terms, I definitely think the
+recommendations in those books are worth taking, and am likely to
+push back against code that strays from them much. In particular,
+please use the standard library facilities whenever you don't
+have a good reason not to, and lean on the type system as much as
+you reasonably can. C++17 is the current target.
 
 ### Conduct
 
