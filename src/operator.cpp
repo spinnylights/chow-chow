@@ -83,7 +83,7 @@ void Operator::index(double n)
     phase_acc.output_amp(n);
 }
 
-void Operator::sample_rate(PhaseAcc::phase_t rate)
+void Operator::sample_rate(uint64_t rate)
 {
     phase_acc.sample_rate(rate);
 }

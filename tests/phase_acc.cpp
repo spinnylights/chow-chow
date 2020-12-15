@@ -12,7 +12,7 @@ TEST_CASE("simple advancing") {
     std::vector<double> expecteds =
         {0.0, PI_4, 1.0, PI_4, 0.0, -PI_4, -1.0, -PI_4};
 
-    static const PhaseAcc::phase_t sr = 800;
+    static const uint64_t sr = 800;
     static const double freq = 1;
 
     PhaseAcc p = {freq, sr};
@@ -34,7 +34,7 @@ TEST_CASE("simple advancing") {
 
 TEST_CASE("advancing with modulator") {
     static const Frequency fr = 8;
-    static const PhaseAcc::phase_t sr = 64;
+    static const uint64_t sr = 64;
 
     PhaseAcc p = {fr, sr};
 

@@ -99,7 +99,7 @@ namespace ChowChow {
          *
          * @param rate in Hz.
          */
-        void sample_rate(PhaseAcc::phase_t rate);
+        void sample_rate(uint64_t rate);
 
         /**
          * @copydoc ChowChow::PhaseAcc::quality()
@@ -109,7 +109,7 @@ namespace ChowChow {
     private:
         void reset_frq();
 
-        static constexpr PhaseAcc::phase_t DEFAULT_SR = 48000;
+        static constexpr uint64_t DEFAULT_SR = 48000;
 
         Frequency frq = 440.;
         Frequency frq_offset = 0.;

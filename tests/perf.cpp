@@ -12,7 +12,7 @@ namespace t = std::chrono;
 using namespace ChowChow;
 
 static constexpr size_t SAMPLE_RATE = 48000;
-static constexpr size_t LENGTH_SECS = 10;
+static constexpr size_t LENGTH_SECS = 20;
 static constexpr size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
 
 class ProfRun {

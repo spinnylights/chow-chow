@@ -154,7 +154,7 @@ namespace ChowChow {
          *
          * @param rate in Hz.
          */
-        void sample_rate(PhaseAcc::phase_t rate)
+        void sample_rate(uint64_t rate)
         {
             for (auto& o : ops) {
                 o.sample_rate(rate);
