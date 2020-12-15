@@ -96,7 +96,13 @@ int main(void)
     }
     const auto runtime = t::steady_clock::now() - before_run;
 
-    std::ofstream dev_null("/dev/null");
+#if defined(_WIN32)
+    static const std::string NULL_DEV = "NUL:";
+#else
+    static const std::string NULL_DEV = "/dev/null";
+#endif
+
+    std::ofstream dev_null(NULL_DEV);
     dev_null << *dummy.end();
 
     std::cout << std::fixed;
