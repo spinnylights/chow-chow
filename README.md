@@ -1,7 +1,7 @@
 # Chow-Chow
 
-Chow-Chow<sup>[1]</sup> is an FM synth.<sup>[2]</sup> It's in
-early development right now, but it will soon support an
+Chow-Chow<sup>[1]</sup> is an FM synth<sup>[2]</sup> library with
+an emphasis on flexibility and ease-of-use. It supports an
 arbitrary number of operators as well as arbitrarily complex FM
 algorithms. Current focus is on the library, but once the library
 is mature, standalone and plugin graphical frontends are on the
