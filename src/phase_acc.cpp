@@ -7,7 +7,7 @@ using P = ChowChow::PhaseAcc;
 static constexpr int NDX_BITS = 11;
 static constexpr uint_fast8_t FRAC_BITS = 64 - NDX_BITS;
 
-void P::phase_incr(Frequency fr, phase_t sr)
+void P::phase_incr(Frequency fr, uint64_t sr)
 {
     f = fr;
     sample_r = sr;
@@ -16,7 +16,7 @@ void P::phase_incr(Frequency fr, phase_t sr)
     bottom_bit = phase_inc & 1;
 }
 
-P::PhaseAcc(Frequency fr, phase_t sr)
+P::PhaseAcc(Frequency fr, uint64_t sr)
 {
     phase_incr(fr, sr);
 }
@@ -27,7 +27,7 @@ void P::frequency(Frequency fr)
     phase_incr(fr, sample_r);
 }
 
-void P::sample_rate(phase_t sr)
+void P::sample_rate(uint64_t sr)
 {
     sample_r = sr;
     phase_incr(f, sr);
@@ -101,12 +101,12 @@ double ChowChow::amp_circ(uint64_t phase)
     return (sinn*fraccos + cosn*fracsin);
 }
 
-double P::amp(phase_t phase) const
+double P::amp(uint64_t phase) const
 {
     return (*amp_fn)(phase) * out_amp;
 }
 
-P::amp_t P::amp() const
+double P::amp() const
 {
     return amp(ph);
 }
@@ -142,17 +142,17 @@ constexpr double pow2_fmod4(double x)
     return x - bits_to_double(b);
 }
 
-P::amp_t P::amp(double mod) const
+double P::amp(double mod) const
 {
     if (mod > 4.0 || mod < -4.0) {
         mod = pow2_fmod4(mod);
     }
 
-    const phase_t scaled_mod = static_cast<phase_t>(mod * PI_2_SIGNED);
+    const uint64_t scaled_mod = static_cast<uint64_t>(mod * PI_2_SIGNED);
 
-    const phase_t signed_scale_ph = (ph >> 1) + scaled_mod;
+    const uint64_t signed_scale_ph = (ph >> 1) + scaled_mod;
 
-    const phase_t adj_ph = (signed_scale_ph << 1) + bottom_bit;
+    const uint64_t adj_ph = (signed_scale_ph << 1) + bottom_bit;
 
     return amp(adj_ph);
 }
@@ -162,7 +162,7 @@ void P::advance() { ph += phase_inc; }
 void P::advance(const PhaseAcc& vibr)
 {
     advance();
-    ph += static_cast<phase_t_signed>(vibr.amp() * PI_2_SIGNED / sample_r);
+    ph += static_cast<int64_t>(vibr.amp() * PI_2_SIGNED / sample_r);
 }
 
 void P::quality(uint_fast8_t q)

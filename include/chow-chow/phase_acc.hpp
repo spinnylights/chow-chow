@@ -15,29 +15,25 @@ namespace ChowChow {
 
     class PhaseAcc {
     public:
-        using phase_t = uint64_t;
-        using phase_t_signed = int64_t;
-        using amp_t = double;
-
-        static constexpr phase_t TAU = UINT64_MAX;
+        static constexpr uint64_t TAU = UINT64_MAX;
         static constexpr double TAU_SIGNED = static_cast<double>(INT64_MAX);
         static constexpr double PI_2_SIGNED = static_cast<double>(INT64_MAX/4 + 1);
 
-        PhaseAcc(Frequency rate, phase_t sample_rate);
+        PhaseAcc(Frequency rate, uint64_t sample_rate);
 
-        phase_t phase() const { return ph; }
-        phase_t phase_incr() const { return phase_inc; }
-        amp_t amp() const;
-        amp_t amp(phase_t phase) const;
-        amp_t amp(double mod) const;
-        amp_t output_amp() const { return out_amp; };
+        uint64_t phase() const { return ph; }
+        uint64_t phase_incr() const { return phase_inc; }
+        double amp() const;
+        double amp(uint64_t phase) const;
+        double amp(double mod) const;
+        double output_amp() const { return out_amp; };
 
-        void phase(phase_t p) { ph = p; }
+        void phase(uint64_t p) { ph = p; }
         void reset_phase() { ph = 0; }
         void frequency(Frequency rate);
-        void sample_rate(phase_t sample_rate);
-        void phase_incr(Frequency rate, phase_t sample_rate);
-        void output_amp(amp_t n) { out_amp = n; }
+        void sample_rate(uint64_t sample_rate);
+        void phase_incr(Frequency rate, uint64_t sample_rate);
+        void output_amp(double n) { out_amp = n; }
 
         /**
          * @brief The fidelity of the sine approximation.
@@ -64,11 +60,11 @@ namespace ChowChow {
         amp_fn_t amp_fn = *amp_circ;
 
         Frequency f;
-        phase_t sample_r;
-        phase_t phase_inc = 0;
+        uint64_t sample_r;
+        uint64_t phase_inc = 0;
         uint_fast8_t bottom_bit = 0;
-        phase_t ph = 0;
-        amp_t out_amp = 1.;
+        uint64_t ph = 0;
+        double out_amp = 1.;
     };
 
     static constexpr std::size_t SINE_TAB_LEN = 2048;
