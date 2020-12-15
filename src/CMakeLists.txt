@@ -14,7 +14,6 @@ add_library(libchowchow
             )
 
 set_property(TARGET libchowchow PROPERTY CXX_STANDARD 17)
-set_property(TARGET libchowchow PROPERTY CXX_EXTENSIONS TRUE)
 
 target_include_directories(libchowchow PUBLIC ../include)
 
