@@ -18,5 +18,3 @@ set_property(TARGET libchowchow PROPERTY CXX_STANDARD 17)
 target_include_directories(libchowchow PUBLIC ../include)
 
 target_compile_features(libchowchow PUBLIC cxx_std_17)
-
-target_compile_options(libchowchow PRIVATE -save-temps=obj -masm=intel)
