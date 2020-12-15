@@ -35,9 +35,9 @@ void P::sample_rate(phase_t sr)
 
 P::amp_t P::amp_sin(phase_t phase) const
 {
-    return std::sin((static_cast<double>(phase) / (static_cast<double>(TAU)
-                    - 1)) * (2*M_PI))
-           * out_amp;
+    static constexpr double TAU_U = static_cast<double>(UINT64_MAX) - 1.;
+    static constexpr double TAU_F = 2*M_PI;
+    return std::sin((static_cast<double>(phase) / TAU_U) * TAU_F) * out_amp;
 }
 
 constexpr uint64_t max_frac(uint64_t frac_bits)
