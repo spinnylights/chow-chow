@@ -132,24 +132,24 @@ void run_synth(std::vector<double>& samples)
         for (size_t j = 0; j < OVERSAMPLING; ++j) {
             static const double scale_fact = .7;
 
-            const double scale_fact_ramped = scale_fact * ramp[i];
+            double scale_fact_ramped = scale_fact * ramp[i];
             ops[4].index(5.969 * scale_fact_ramped);
             ops[3].index(8.231 * scale_fact_ramped);
             ops[2].index(8.231 * scale_fact_ramped);
             ops[1].index(20.96 * scale_fact_ramped);
 
-            const double connection_str_ramped = 1.87 * scale_fact_ramped;
+            double connection_str_ramped = 1.87 * scale_fact_ramped;
             ops.connect(4, 3, connection_str_ramped);
             ops.connect(4, 2, connection_str_ramped);
             ops.connect(4, 1, connection_str_ramped);
 
-            const double vib_amp_ramped = VIB_AMP - VIB_AMP * ramp[i];
+            double vib_amp_ramped = VIB_AMP - VIB_AMP * ramp[i];
             ops[4].vibrato_amp(vib_amp_ramped);
             ops[3].vibrato_amp(vib_amp_ramped);
             ops[2].vibrato_amp(vib_amp_ramped);
             ops[1].vibrato_amp(vib_amp_ramped);
 
-            const double vib_amp_ramped_prdic = vib_amp_ramped * M_PI;
+            double vib_amp_ramped_prdic = vib_amp_ramped * M_PI;
             ops[4].vibrato_freq(std::sin(vib_amp_ramped_prdic * 239) * 40 + VIB_FRQ);
             ops[3].vibrato_freq(std::sin(vib_amp_ramped_prdic * 182) * 38 + VIB_FRQ);
             ops[2].vibrato_freq(std::sin(vib_amp_ramped_prdic * 403) * 18 + VIB_FRQ);
