@@ -115,6 +115,12 @@ double P::amp() const
     return amp(ph);
 }
 
+/* Aside from MSVC not supporting designated initializers
+ * at this time, std::fmod is actually faster under it
+ * than this shortcut. Either of these things may change
+ * in the future, so remember that.
+ */
+#ifndef _MSC_VER
 union double_and_bits {
     double d;
     uint64_t u;
@@ -145,11 +151,16 @@ constexpr double pow2_fmod4(double x)
 
     return x - bits_to_double(b);
 }
+#endif
 
 double P::amp(double mod) const
 {
     if (mod > 4.0 || mod < -4.0) {
+#ifdef _MSC_VER
+        mod = std::fmod(mod, 4.0);
+#else
         mod = pow2_fmod4(mod);
+#endif
     }
 
     const uint64_t scaled_mod = static_cast<uint64_t>(mod * PI_2_SIGNED);
