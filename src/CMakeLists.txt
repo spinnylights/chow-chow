@@ -6,7 +6,6 @@ add_library(libchowchow
             ${HEADER_LIST}
             setting.cpp
             frequency.cpp
-            sample.cpp
             operator.cpp
             operators.cpp
             wav_file.cpp

@@ -1,10 +1,6 @@
 add_executable(unit
                main.cpp
-               sample.cpp
-               sine.cpp
                frequency.cpp
-               phase.cpp
-               amp.cpp
                wav_file.cpp
                operator.cpp
                operators.cpp
