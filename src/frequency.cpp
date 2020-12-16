@@ -40,11 +40,3 @@ F& F::operator*=(Frequency fr)
 
     return *this;
 }
-
-F& F::operator/=(Frequency fr)
-{
-    f = (static_cast<__uint128_t>(f) * (static_cast<__uint128_t>(1) << FREQ_FRAC_BITS))
-        / static_cast<__uint128_t>(fr.raw());
-
-    return *this;
-}

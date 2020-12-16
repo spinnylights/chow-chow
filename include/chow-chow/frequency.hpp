@@ -32,7 +32,6 @@ namespace ChowChow {
         Frequency& operator+=(Frequency fr) { f += fr.raw(); return *this; }
         Frequency& operator-=(Frequency fr) { f -= fr.raw(); return *this; }
         Frequency& operator*=(Frequency fr);
-        Frequency& operator/=(Frequency fr);
 
     private:
         freq_t f = 1;
@@ -41,7 +40,6 @@ namespace ChowChow {
     inline Frequency operator+(Frequency a, Frequency b) { return a += b; }
     inline Frequency operator-(Frequency a, Frequency b) { return a -= b; }
     inline Frequency operator*(Frequency a, Frequency b) { return a *= b; }
-    inline Frequency operator/(Frequency a, Frequency b) { return a /= b; }
 
     inline bool operator==(Frequency a, Frequency b)
     {

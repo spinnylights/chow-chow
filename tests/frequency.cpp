@@ -44,12 +44,6 @@ TEST_CASE("multiplying") {
     comp_w_double((f * g), 22.);
 }
 
-TEST_CASE("dividing") {
-    Frequency f = 2.2;
-    Frequency g = 10;
-    comp_w_double((f / g), .22);
-}
-
 TEST_CASE("equality") {
     Frequency f = 2.2;
     Frequency g = 2.2;
