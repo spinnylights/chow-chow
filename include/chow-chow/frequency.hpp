@@ -13,8 +13,10 @@ namespace ChowChow {
         static constexpr int FREQ_INT_BITS = 21; // enough for 20000 * 100
         static constexpr int FREQ_FRAC_BITS =
             sizeof(freq_t)*CHAR_BIT - FREQ_INT_BITS;
-        static const freq_t MAX_FRAC = std::pow(2, FREQ_FRAC_BITS) - 1;
-        static const freq_t MAX_INT = std::pow(2, FREQ_INT_BITS) - 1;
+        static constexpr freq_t MAX_FRAC =
+            (static_cast<uint64_t>(1) << FREQ_FRAC_BITS) - 1;
+        static constexpr freq_t MAX_INT =
+            (static_cast<uint64_t>(1) << FREQ_INT_BITS) - 1;
 
         Frequency() {};
         Frequency(freq_t n) :f{n} {};
