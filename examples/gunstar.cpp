@@ -23,6 +23,10 @@ static constexpr double FREQ = 73.42; // ~d2
 static constexpr double VIB_FRQ = 40.0;
 static constexpr double VIB_AMP = 15.25;
 
+#ifdef _WIN32
+static constexpr double M_PI = 3.14159265358979323846;
+#endif
+
 void set_up_ops(Operators<4>& ops)
 {
     /*      |-|

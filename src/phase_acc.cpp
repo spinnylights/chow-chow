@@ -7,6 +7,10 @@ using P = ChowChow::PhaseAcc;
 static constexpr int NDX_BITS = 11;
 static constexpr uint_fast8_t FRAC_BITS = 64 - NDX_BITS;
 
+#ifdef _WIN32
+static constexpr double M_PI = 3.14159265358979323846;
+#endif
+
 void P::phase_incr(Frequency fr, uint64_t sr)
 {
     f = fr;
