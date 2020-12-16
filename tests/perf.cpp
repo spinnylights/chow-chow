@@ -80,10 +80,10 @@ public:
     void run()
     {
         // so our profiling run doesn't get optimized out
-        std::array<double, LENGTH> dummy;
+        std::vector<double> dummy(LENGTH);
 
         for (std::size_t i = 0; i < LENGTH; ++i) {
-            dummy[i] = get_sig(ops);
+            dummy.push_back(get_sig(ops));
         }
 
 #if defined(_WIN32)
@@ -93,7 +93,7 @@ public:
 #endif
 
         std::ofstream dev_null(NULL_DEV);
-        dev_null << *dummy.end();
+        dev_null << dummy.back();
     }
 
     void print_results()
