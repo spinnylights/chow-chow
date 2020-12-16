@@ -4,6 +4,11 @@
 #include <stdexcept>
 #include <iostream>
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#pragma intrinsic(_umul128)
+#endif
+
 #include "chow-chow/frequency.hpp"
 
 using F = ChowChow::Frequency;
@@ -35,8 +40,19 @@ double F::make_double() const
 
 F& F::operator*=(Frequency fr)
 {
+#ifdef _MSC_VER
+    uint64_t high, low;
+
+    low = _umul128(f, fr.raw(), &high);
+
+    low >>= FREQ_FRAC_BITS;
+    high = (high & MAX_FRAC) << FREQ_INT_BITS;
+
+    f = high + low;
+#else
     f = (static_cast<__uint128_t>(f) * static_cast<__uint128_t>(fr.raw()))
         >> FREQ_FRAC_BITS;
+#endif
 
     return *this;
 }
