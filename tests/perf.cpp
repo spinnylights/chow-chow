@@ -115,7 +115,7 @@ public:
         std::cout << "\n";
 
         std::cout << std::fixed;
-        std::cout << std::setprecision(15);
+        std::cout << std::setprecision(9);
 
         print_time(setup,    "setup:   ");
         print_time(runtime,  "runtime: ");
