@@ -38,7 +38,7 @@ TEST_CASE("simple sig") {
 
     ops.reorder();
 
-    CHECK(ops.sig() == 0.);
+    CHECK(std::fabs(ops.sig()) < 1e-15);
 
     ops.advance();
 
