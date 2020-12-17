@@ -36,19 +36,73 @@ namespace ChowChow {
         void output_amp(double n) { out_amp = n; }
 
         /**
-         * @brief The fidelity of the sine approximation.
+         * @brief The available sine algorithms.
          *
-         * Controls the accuracy and computational intensiveness
-         * of the sine approximation function used to compute the
-         * output. Lower values are faster, but also introduce
-         * more noise into the signal, and are more prone to
-         * aliasing as a result.
+         * These are algorithms that approximate the mathematical
+         * sine function, which plays a significant role in this
+         * library's audio synthesis routine. They vary in their
+         * accuracy and performance characteristics. Less
+         * accurate algorithms introduce more noise into the
+         * signal, which can degrade sound quality and lead to
+         * aliasing problems, although it depends on what you're
+         * doing.
          *
-         * @param q in the range of 1–4, with 1 being
-         * roughest/fastest and 4 being purest/slowest. 3 by
-         * default.
+         * The differences in speed between them vary
+         * considerably based on platform, compiler, hardware,
+         * etc., so you may need to experiment to figure out
+         * what's best for your use case. The program
+         * tests/perf.cpp can be used to compare them in this
+         * regard. Their accuracy characteristics are fixed,
+         * however.
+         *
+         * If you're using this library to build a larger
+         * application, consider preserving this choice in the
+         * interface you present to your end users, so they can
+         * account for differences between their environments.
          */
-        void quality(uint_fast8_t q);
+        enum SineAlg {
+            /**
+             * A raw table lookup with no interpolation. It's
+             * almost certainly the fastest option, but also the
+             * noisiest.
+             */
+            raw_lookup,
+            /**
+             * Linear interpolation. More accurate than a simple
+             * lookup, but also slower.
+             */
+            linear,
+            /**
+             * Circular interpolation. Uses a simple lookup for
+             * sine and cosine and then refines them with lookups
+             * into short tables for the small angles. Generally
+             * very close to linear interpolation in runtime, but
+             * very close to the stdlib sin() in accuracy (and
+             * sometimes even a bit better for certain values).
+             * In terms of sound quality it's practically
+             * indistinguishable for synthesis purposes. In some
+             * environments, it's over twice as fast as the
+             * stdlib sin(), but in other environments the stdlib
+             * sin() beats it, so you'll need to test to compare
+             * them.
+             */
+            circular,
+            /**
+             * The standard library sin() function. Usually the
+             * most accurate, and sometimes faster than
+             * everything but the raw lookup, so it's the
+             * default. It's worth comparing to the other methods
+             * to see what holds true in your case, though.
+             */
+            stdlib,
+        };
+
+        /**
+         * @brief The sine algorithm used by the operator.
+         *
+         * @param alg the desired algorithm.
+         */
+        void sine_alg(SineAlg alg);
 
         void advance();
         void advance(const PhaseAcc& vibrato);

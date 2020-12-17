@@ -174,12 +174,12 @@ namespace ChowChow {
         }
 
         /**
-         * @copydoc ChowChow::PhaseAcc::quality()
+         * @copydoc ChowChow::PhaseAcc::sine_alg()
          */
-        void quality(uint_fast8_t q)
+        void sine_alg(PhaseAcc::SineAlg alg)
         {
             for (auto& o : ops) {
-                o.quality(q);
+                o.sine_alg(alg);
             }
         }
 

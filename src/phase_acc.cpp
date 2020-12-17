@@ -180,15 +180,12 @@ void P::advance(const PhaseAcc& vibr)
     ph += static_cast<int64_t>(vibr.amp() * PI_2_SIGNED / sample_r);
 }
 
-void P::quality(uint_fast8_t q)
+void P::sine_alg(SineAlg alg)
 {
-    if (q >= 4) {
-        amp_fn = *amp_sin;
-    } else if (q == 3) {
-        amp_fn = *amp_circ;
-    } else if (q == 2) {
-        amp_fn = *amp_linear;
-    } else {
-        amp_fn = *amp_direct;
+    switch (alg) {
+        case (stdlib):     amp_fn = *amp_sin;    break;
+        case (circular):   amp_fn = *amp_circ;   break;
+        case (linear):     amp_fn = *amp_linear; break;
+        case (raw_lookup): amp_fn = *amp_direct; break;
     }
 }

@@ -102,9 +102,9 @@ namespace ChowChow {
         void sample_rate(uint64_t rate);
 
         /**
-         * @copydoc ChowChow::PhaseAcc::quality()
+         * @copydoc ChowChow::PhaseAcc::sine_alg()
          */
-        void quality(uint_fast8_t q) { phase_acc.quality(q); }
+        void sine_alg(PhaseAcc::SineAlg alg) { phase_acc.sine_alg(alg); }
 
     private:
         void reset_frq();

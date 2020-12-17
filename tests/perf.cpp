@@ -17,14 +17,14 @@ static constexpr size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
 
 class ProfRun {
 public:
-    ProfRun(uint_fast8_t qual)
-        :q{qual}
+    ProfRun(PhaseAcc::SineAlg sfn)
+        :fn{sfn}
     {
         const auto before = t::steady_clock::now();
 
         ops.sample_rate(SAMPLE_RATE);
 
-        ops.quality(qual);
+        ops.sine_alg(fn);
 
         ops[10].freq(13126.974048651);
         ops[9].freq(14144.88951279354);
@@ -86,7 +86,7 @@ public:
             dummy.push_back(get_sig(ops));
         }
 
-#if defined(_WIN32)
+#ifdef _WIN32
         static const std::string NULL_DEV = "NUL:";
 #else
         static const std::string NULL_DEV = "/dev/null";
@@ -99,7 +99,20 @@ public:
     void print_results()
     {
         std::cout << "\n";
-        std::cout <<         "quality: " << static_cast<int>(q) << "\n";
+        std::cout << "sine alg: ";
+
+        switch (fn) {
+            case (PhaseAcc::SineAlg::raw_lookup): std::cout << "raw lookup";
+                                                   break;
+            case (PhaseAcc::SineAlg::linear):     std::cout << "linear";
+                                                   break;
+            case (PhaseAcc::SineAlg::circular):   std::cout << "circular";
+                                                   break;
+            case (PhaseAcc::SineAlg::stdlib):     std::cout << "stdlib";
+                                                   break;
+        }
+
+        std::cout << "\n";
 
         std::cout << std::fixed;
         std::cout << std::setprecision(15);
@@ -126,15 +139,21 @@ private:
     Operators<10> ops;
     t::steady_clock::duration setup = {};
     t::steady_clock::duration runtime = {};
-    uint_fast8_t q;
+    PhaseAcc::SineAlg fn;
 };
 
 int main(void)
 {
     std::cout << "** PERF TEST **\n";
 
-    for (uint_fast8_t i = 1; i <= 4; ++i) {
-        ProfRun r = {i};
+    std::array<PhaseAcc::SineAlg, 4> sfns =
+        { PhaseAcc::SineAlg::raw_lookup,
+          PhaseAcc::SineAlg::linear,
+          PhaseAcc::SineAlg::circular,
+          PhaseAcc::SineAlg::stdlib, };
+
+    for (const auto& sfn : sfns) {
+        ProfRun r = {sfn};
         r.run();
         r.print_results();
     }
