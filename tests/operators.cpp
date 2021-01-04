@@ -42,7 +42,7 @@ TEST_CASE("simple sig") {
 
     ops.advance();
 
-    CHECK(std::abs(ops.sig() - 0.) > 1e-10);
+    CHECK(std::abs(ops.sig()) > 1e-10);
     CHECK(ops[2].sig() == ops.check_sig(2));
     CHECK(ops[1].sig() == ops.check_sig(1));
 }
