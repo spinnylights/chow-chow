@@ -174,12 +174,22 @@ namespace ChowChow {
         }
 
         /**
-         * @copydoc ChowChow::PhaseAcc::sine_alg()
+         * @copydoc ChowChow::PhaseAcc::sine_alg(SineAlg)
          */
         void sine_alg(PhaseAcc::SineAlg alg)
         {
             for (auto& o : ops) {
                 o.sine_alg(alg);
+            }
+        }
+
+        /**
+         * @copydoc ChowChow::PhaseAcc::sine_alg(std::size_t)
+         */
+        void sine_alg(std::size_t acc)
+        {
+            for (auto& o : ops) {
+                o.sine_alg(acc);
             }
         }
 

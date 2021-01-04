@@ -4,6 +4,7 @@ file(GLOB HEADER_LIST CONFIGURE_DEPENDS
 
 add_library(libchowchow
             ${HEADER_LIST}
+            "${Chow-Chow_SOURCE_DIR}/extern/magic_enum/include/magic_enum.hpp"
             setting.cpp
             frequency.cpp
             operator.cpp
@@ -15,5 +16,6 @@ add_library(libchowchow
 set_property(TARGET libchowchow PROPERTY CXX_STANDARD 17)
 
 target_include_directories(libchowchow PUBLIC ../include)
+target_include_directories(libchowchow PUBLIC ../extern/magic_enum/include)
 
 target_compile_features(libchowchow PUBLIC cxx_std_17)

@@ -4,6 +4,7 @@
 #include <array>
 #include <iostream>
 #include <iomanip>
+#include <random>
 
 #include "chow-chow/operators.hpp"
 
@@ -12,63 +13,48 @@ namespace t = std::chrono;
 using namespace ChowChow;
 
 static constexpr size_t SAMPLE_RATE = 48000;
-static constexpr size_t LENGTH_SECS = 20;
+static constexpr size_t LENGTH_SECS = 2;
 static constexpr size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
+
+static constexpr double VIB_FRQ = 40.0;
+static constexpr double VIB_AMP = 15.25;
+
+static constexpr size_t OPS = 3;
 
 class ProfRun {
 public:
-    ProfRun(PhaseAcc::SineAlg sfn)
-        :fn{sfn}
+    ProfRun(std::size_t sine_alg_acc)
     {
+        ramp = [&]{
+            std::vector<double> e;
+
+            for (size_t i = 0; i < LENGTH; ++i) {
+                const double x = static_cast<double>(i) / LENGTH;
+                e.push_back(1.0 - x);
+            }
+
+            return e;
+        }();
+
         const auto before = t::steady_clock::now();
 
         ops.sample_rate(SAMPLE_RATE);
 
-        ops.sine_alg(fn);
+        ops.sine_alg(sine_alg_acc);
 
-        ops[10].freq(13126.974048651);
-        ops[9].freq(14144.88951279354);
-        ops[8].freq(2898.3222486121517);
-        ops[7].freq(2878.412085879245);
-        ops[6].freq(5464.611331928606);
-        ops[5].freq(15509.342454971022);
-        ops[4].freq(488.9778654984108);
-        ops[3].freq(16775.10809601692);
-        ops[2].freq(18661.19102658915);
-        ops[1].freq(17664.31544642939);
+        fn = PhaseAcc::sine_alg_id(sine_alg_acc);
 
-        ops[8].ratio(5.93704982759879);
-        ops[9].ratio(8.638477916782952);
-        ops[8].ratio(4.906882512632615);
-        ops[7].ratio(4.566359535717398);
-        ops[6].ratio(0.42219593808689515);
-        ops[5].ratio(0.8915818065106733);
-        ops[4].ratio(5.929188029502441);
-        ops[3].ratio(3.2890648603934722);
-        ops[2].ratio(5.370235031798406);
-        ops[1].ratio(9.02961705374125);
+        static constexpr double FREQ = 250.; // ~d2
 
-        ops[10].index(1.1692492545429838);
-        ops[9].index(2.093129103156454);
-        ops[8].index(7.480729164102332);
-        ops[7].index(2.156953055634912);
-        ops[6].index(1.1899807519294092);
-        ops[5].index(1.244709379963963);
-        ops[4].index(1.1065222424812804);
-        ops[3].index(2.1188492043919456);
-        ops[2].index(8.621453890817373);
-        ops[1].index(70.20500272644726);
+        ops[3].freq(FREQ);
+        ops[2].freq(FREQ);
+        ops[1].freq(FREQ);
 
-        ops.connect(10, 9);
-        ops.connect(9, 8);
-        ops.connect(8, 7);
-        ops.connect(7, 6);
-        ops.connect(6, 5);
-        ops.connect(5, 4);
-        ops.connect(4, 3);
-        ops.connect(3, 2);
-        ops.connect(2, 1);
-        ops.connect(1, 10);
+        ops[3].ratio(2.35);
+        ops[2].ratio(3.85);
+
+        ops.connect(3, 2, 2.3);
+        ops.connect(2, 1, 1.8);
 
         ops.output(1);
 
@@ -80,10 +66,13 @@ public:
     void run()
     {
         // so our profiling run doesn't get optimized out
-        std::vector<double> dummy(LENGTH);
+        std::vector<double> dummy;
 
         for (std::size_t i = 0; i < LENGTH; ++i) {
-            dummy.push_back(get_sig(ops));
+
+            ops[2].index(0.25 + ramp[i]);
+
+            dummy.push_back(get_sig());
         }
 
 #ifdef _WIN32
@@ -94,25 +83,12 @@ public:
 
         std::ofstream dev_null(NULL_DEV);
         dev_null << dummy.back();
+
     }
 
     void print_results()
     {
-        std::cout << "\n";
-        std::cout << "sine alg: ";
-
-        switch (fn) {
-            case (PhaseAcc::SineAlg::raw_lookup): std::cout << "raw lookup";
-                                                   break;
-            case (PhaseAcc::SineAlg::linear):     std::cout << "linear";
-                                                   break;
-            case (PhaseAcc::SineAlg::circular):   std::cout << "circular";
-                                                   break;
-            case (PhaseAcc::SineAlg::stdlib):     std::cout << "stdlib";
-                                                   break;
-        }
-
-        std::cout << "\n";
+        std::cout << "\n" << "sine alg: " << fn << "\n";
 
         std::cout << std::fixed;
         std::cout << std::setprecision(9);
@@ -122,7 +98,7 @@ public:
     }
 
 private:
-    double get_sig(Operators<10> ops)
+    double get_sig()
     {
         const auto before_run = t::steady_clock::now();
         const auto sig = ops.sig();
@@ -136,25 +112,40 @@ private:
         std::cout << preface << t::duration<double>(d).count() << "s\n";
     }
 
-    Operators<10> ops;
+    Operators<OPS> ops;
     t::steady_clock::duration setup = {};
     t::steady_clock::duration runtime = {};
-    PhaseAcc::SineAlg fn;
+    std::vector<double> ramp;
+    std::string fn;
 };
 
 int main(void)
 {
     std::cout << "** PERF TEST **\n";
 
-    std::array<PhaseAcc::SineAlg, 4> sfns =
-        { PhaseAcc::SineAlg::raw_lookup,
-          PhaseAcc::SineAlg::linear,
-          PhaseAcc::SineAlg::circular,
-          PhaseAcc::SineAlg::stdlib, };
+    auto rd = std::random_device {};
+    auto rng = std::default_random_engine {rd()};
 
-    for (const auto& sfn : sfns) {
-        ProfRun r = {sfn};
-        r.run();
-        r.print_results();
+    std::array<size_t, PhaseAcc::SINE_ALG_COUNT> indxs;
+    for (size_t i = 0; i < indxs.size(); ++i) {
+        indxs[i] = i;
+    }
+
+    std::vector<ProfRun> ps;
+    for (const auto& i : indxs) {
+        std::size_t acc = i + 1;
+        ps.push_back({acc});
+    }
+
+    for (size_t i = 0; i < 30; ++i) {
+        std::shuffle(indxs.begin(), indxs.end(), rng);
+
+        for (const auto& indx : indxs) {
+            ps.at(indx).run();
+        }
+    }
+
+    for (auto& p : ps) {
+        p.print_results();
     }
 }

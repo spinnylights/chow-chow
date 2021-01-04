@@ -5,13 +5,15 @@
 #include <array>
 #include <functional>
 
+#include "magic_enum.hpp"
+
 #include "chow-chow/frequency.hpp"
 
 namespace ChowChow {
-    double amp_sin(uint64_t phase);
+    double amp_taylor(uint64_t phase);
     double amp_circ(uint64_t phase);
     double amp_linear(uint64_t phase);
-    double amp_direct(uint64_t phase);
+    double amp_raw_lookup(uint64_t phase);
 
     class PhaseAcc {
     public:
@@ -47,62 +49,110 @@ namespace ChowChow {
          * aliasing problems, although it depends on what you're
          * doing.
          *
-         * The differences in speed between them vary
-         * considerably based on platform, compiler, hardware,
-         * etc., so you may need to experiment to figure out
-         * what's best for your use case. The program
-         * tests/perf.cpp can be used to compare them in this
-         * regard. Their accuracy characteristics are fixed,
-         * however.
-         *
-         * If you're using this library to build a larger
-         * application, consider preserving this choice in the
-         * interface you present to your end users, so they can
-         * account for differences between their environments.
-         */
-        enum SineAlg {
+         * The differences in speed between them can vary based
+         * on platform, compiler, hardware, etc., so you may need
+         * to experiment to figure out what's best for your use
+         * case. The test program `perf` can be used to
+         * compare them in this regard. Their accuracy
+         * characteristics are fixed, however, and the
+         * relative differences in speed between them tend to
+         * hold across environments as well. See
+         * PhaseAcc::DEFAULT_SINE_ALG for the default.
+         * */
+        enum class SineAlg {
             /**
-             * A raw table lookup with no interpolation. It's
-             * almost certainly the fastest option, but also the
-             * noisiest.
+             * A raw table lookup with no interpolation. For a
+             * pure sine wave, noise is found around 65 dB or
+             * below, which is noisy enough to cause audible
+             * distortion in many applications as well as
+             * aliasing problems. However, it is very fast, and
+             * may be good enough for your use case.
              */
             raw_lookup,
             /**
-             * Linear interpolation. More accurate than a simple
-             * lookup, but also slower.
+             * Linear interpolation. For a pure sine wave,
+             * noise is found around 140 dB or below. This is
+             * noisy enough to cause issues in certain cases, but
+             * often is indistinguishable perceptually from the
+             * more accurate algorithms. Worth trying if you need
+             * a speed boost.
              */
             linear,
             /**
              * Circular interpolation. Uses a simple lookup for
              * sine and cosine and then refines them with lookups
-             * into short tables for the small angles. Generally
-             * very close to linear interpolation in runtime, but
-             * very close to the stdlib sin() in accuracy (and
-             * sometimes even a bit better for certain values).
-             * In terms of sound quality it's practically
-             * indistinguishable for synthesis purposes. In some
-             * environments, it's over twice as fast as the
-             * stdlib sin(), but in other environments the stdlib
-             * sin() beats it, so you'll need to test to compare
-             * them.
+             * into short tables for the small angles. For a pure
+             * sine wave, noise is found around 210 dB or below,
+             * which is quiet enough to be negligible in most
+             * cases (you probably won't even see it with a
+             * typical audio spectrum analyzer). Roughly 1.5x
+             * faster than the Taylor series approximation in a
+             * typical case (test with `perf` if you want
+             * specific numbers for your environment).
              */
             circular,
             /**
-             * The standard library sin() function. Usually the
-             * most accurate, and sometimes faster than
-             * everything but the raw lookup, so it's the
-             * default. It's worth comparing to the other methods
-             * to see what holds true in your case, though.
+             * Uses a slightly massaged Taylor series. Accurate
+             * to within 18 ULPs in the worst case. The spectral
+             * purity is as good as a typical standard library
+             * sin(), but it's probably overkill in most cases.
              */
-            stdlib,
+            taylor,
         };
 
+        static std::string sine_alg_id(SineAlg alg);
+        static std::string sine_alg_id(std::size_t acc);
+        static SineAlg acc_to_sine_alg(std::size_t acc);
+
         /**
-         * @brief The sine algorithm used by the operator.
+         * @brief The default sine algorithm.
+         */
+        static constexpr SineAlg DEFAULT_SINE_ALG = SineAlg::circular;
+
+        /**
+         * @brief The number assigned to the fastest and least
+         * accurate sine algorithm.
+         */
+        static constexpr std::size_t SINE_ALG_START = 1;
+
+        /**
+         * @brief The number assigned to the slowest and most
+         * accurate sine algorithm, as well as the total number
+         * of algorithms overall.
+         */
+        static constexpr std::size_t SINE_ALG_COUNT =
+            magic_enum::enum_count<SineAlg>();
+
+        /**
+         * @brief Get the current sine algorithm.
+         */
+        SineAlg sine_alg() const;
+
+        /**
+         * @brief Set the sine algorithm used by the
+         * accumulator(s).
          *
          * @param alg the desired algorithm.
          */
         void sine_alg(SineAlg alg);
+
+        /**
+         * @brief Set the sine algorithm used by the
+         * accumulator(s), specified by a number denoting the
+         * desired accuracy of the algorithm.
+         *
+         * This takes a cardinal number that corresponds to one
+         * of the available algorithms. The higher the number,
+         * the slower and more accurate the algorithm. If you
+         * have quantitatively precise requirements for speed or
+         * accuracy here, consult the PhaseAcc::SineAlg documentation, test
+         * the algorithms with the `perf` test, and use the
+         * PhaseAcc::sine_alg(SineAlg) interface instead of this.
+         *
+         * @param accuracy A number from PhaseAcc::SINE_ALG_START to
+         * PhaseAcc::SINE_ALG_COUNT.
+         */
+        void sine_alg(std::size_t accuracy);
 
         void advance();
         void advance(const PhaseAcc& vibrato);
@@ -111,7 +161,11 @@ namespace ChowChow {
         // ~5% faster than std::function
         typedef double(*amp_fn_t)(uint64_t);
 
-        amp_fn_t amp_fn = *amp_circ;
+        amp_fn_t amp_fn_ptr(SineAlg) const;
+
+        const amp_fn_t DEFAULT_SINE_FN = amp_fn_ptr(DEFAULT_SINE_ALG);
+
+        amp_fn_t amp_fn = DEFAULT_SINE_FN;
 
         Frequency f;
         uint64_t sample_r;
@@ -119,6 +173,7 @@ namespace ChowChow {
         uint_fast8_t bottom_bit = 0;
         uint64_t ph = 0;
         double out_amp = 1.;
+
     };
 
     static constexpr std::size_t SINE_TAB_LEN = 2048;

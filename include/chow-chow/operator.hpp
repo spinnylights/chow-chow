@@ -102,9 +102,14 @@ namespace ChowChow {
         void sample_rate(uint64_t rate);
 
         /**
-         * @copydoc ChowChow::PhaseAcc::sine_alg()
+         * @copydoc ChowChow::PhaseAcc::sine_alg(SineAlg)
          */
         void sine_alg(PhaseAcc::SineAlg alg) { phase_acc.sine_alg(alg); }
+
+        /**
+         * @copydoc ChowChow::PhaseAcc::sine_alg(std::size_t)
+         */
+        void sine_alg(std::size_t acc) { phase_acc.sine_alg(acc); }
 
     private:
         void reset_frq();
