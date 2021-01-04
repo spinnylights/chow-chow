@@ -21,24 +21,24 @@ Thanks for your interest!
 If you want to add a new feature or make any other significant
 changes to the program's behavior, please make a new issue first
 and describe what you have in mind there, making it clear that
-you're willing to write the implementation. That way we can talk
-it over first before you spend a lot of time writing code.
+you're willing to write the implementation. This includes any
+modifications to the public API. That way we can talk it over
+first before you spend a lot of time writing code.
 
 If you want to submit a bugfix or optimization, you can just go
 ahead and create a pull request if you like. If you're unsure if
-what you're seeing is a bug or your planned fix has some
+what you're seeing is a bug, or your planned fix has some
 downsides, feel free to make a new issue for it and then we can
 discuss. Optimization pull requests should be accompanied with
 test results, a detailed description of the environment(s) the
 tests were run in (including hardware), and ideally a precise
-description of why your change improves performance and under
-what circumstances.
+description of why and in what sense your change improves
+performance.
 
-There is a simple end-to-end performance test
-available under `build/tests/perf` (with the default build
-settings) that you may find convenient. It outputs timing results
-if run directly, and is suitable for running in valgrind if you
-want more detailed information.
+There is a simple end-to-end speed test available under
+`build/tests/perf` (with the default build settings) that you may
+find convenient. It outputs timing results for each sine
+algorithm using a test routine and the stdlib timing facilities.
 
 ### Style
 
