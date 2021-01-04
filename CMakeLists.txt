@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16..3.18)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 project(Chow-Chow VERSION 0.1
-                  DESCRIPTION "A powerful FM synth"
+                  DESCRIPTION "A flexible FM synth"
                   LANGUAGES CXX
                   )
 
