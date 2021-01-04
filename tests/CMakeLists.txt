@@ -15,3 +15,4 @@ target_link_libraries(unit PUBLIC libchowchow)
 add_test(NAME unittest COMMAND unit)
 
 setup_simple_bin(perf)
+setup_simple_bin(pure_sine)
