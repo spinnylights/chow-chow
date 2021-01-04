@@ -26,8 +26,6 @@ int main(void)
 
     ops.output(1);
 
-    ops.reorder();
-
     const std::vector<double> ramp = [&]{
         std::vector<double> e;
 

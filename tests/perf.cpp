@@ -58,8 +58,6 @@ public:
 
         ops.output(1);
 
-        ops.reorder();
-
         setup = t::steady_clock::now() - before;
     }
 

@@ -69,8 +69,6 @@ void set_up_ops(Operators<4>& ops)
     ops.output(3);
     ops.output(2);
     ops.output(1);
-
-    ops.reorder();
 }
 
 void make_envelope(std::vector<double>& e)
@@ -139,9 +137,9 @@ void run_synth(std::vector<double>& samples)
             ops[1].index(20.96 * scale_fact_ramped);
 
             double connection_str_ramped = 1.87 * scale_fact_ramped;
-            ops.connect(4, 3, connection_str_ramped);
-            ops.connect(4, 2, connection_str_ramped);
-            ops.connect(4, 1, connection_str_ramped);
+            ops.connect_adj(4, 3, connection_str_ramped);
+            ops.connect_adj(4, 2, connection_str_ramped);
+            ops.connect_adj(4, 1, connection_str_ramped);
 
             double vib_amp_ramped = VIB_AMP - VIB_AMP * ramp[i];
             ops[4].vibrato_amp(vib_amp_ramped);

@@ -23,8 +23,6 @@ int main(void)
 
     ops.output(1);
 
-    ops.reorder();
-
     const std::vector<double> ramp = [&]{
         std::vector<double> e;
 
@@ -56,7 +54,7 @@ int main(void)
     std::vector<double> out;
 
     for (std::size_t i = 0; i < LENGTH; ++i) {
-        ops.connect(1, 1, cnctn_strngth*ramp[i]);
+        ops.connect_adj(1, 1, cnctn_strngth*ramp[i]);
 
         const auto sig = ops.sig() * env[i];
 

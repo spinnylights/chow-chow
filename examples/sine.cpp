@@ -22,8 +22,6 @@ int main(void)
 
     ops.output(1);
 
-    ops.reorder();
-
     std::vector<double> out;
 
     for (std::size_t i = 0; i < LENGTH; ++i) {

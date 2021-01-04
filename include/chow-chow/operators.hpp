@@ -74,12 +74,17 @@ namespace ChowChow {
          * @brief Connect a modulator to a carrier.
          *
          * Connect the output of one of the operators to the
-         * input of another, or change the strength of an
-         * existing connection. If the number of the carrier is
+         * input of another. If the number of the carrier is
          * equal to or higher than the modulator, a feedback loop
          * is implied. Note that feedback loops require extra
-         * operations because the signal from some operators will
-         * need to be calculated more than once a period.
+         * operations each frame because the signal from some
+         * operators will need to be calculated more than once a
+         * period.
+         *
+         * This is intended to be called infrequently because it
+         * recomputes the operator order, which is an expensive
+         * operation. If you want to change the strength of an
+         * existing connection, use Operators::connect_adj.
          *
          * @param from the number of the operator to use as a
          * modulator, 1-indexed.
@@ -91,6 +96,31 @@ namespace ChowChow {
          * signal by.
          */
         void connect(std::size_t from, std::size_t to, double amp = 1.)
+        {
+            connect_adj(from, to, amp);
+            reorder();
+        }
+
+        /**
+         * @brief Change the strength of an existing connection
+         * between a modulator and a carrier.
+         *
+         * This is comparable to Operators::connect, but it does
+         * not recompute the operator order, so it should not be
+         * used during setup (it will have no apparent effect if
+         * Operators::connect has not been used first for the
+         * from-to pair in question).
+         *
+         * @param from the number of the operator to use as a
+         * modulator, 1-indexed.
+         *
+         * @param to the number of the operator to use as a
+         * carrier, 1-indexed.
+         *
+         * @param amp optionally, a factor to scale the modulator
+         * signal by.
+         */
+        void connect_adj(std::size_t from, std::size_t to, double amp = 1.)
         {
             cnctns.at(from - 1).at(to - 1) = amp;
         }
@@ -122,6 +152,23 @@ namespace ChowChow {
         /**
          * @brief Recompute the unravelled order the operators will
          * be measured in.
+         *
+         * The connections between the operators form a graph,
+         * and the output of some operators depends on the output
+         * of operators connected to them. Furthermore, some
+         * operators feed back to earlier operators, which
+         * requires some operators to be re-measured after this
+         * point. As a result, if the graph is changed, it must
+         * be traversed and a new order determined in which to
+         * take the output of the operators.
+         *
+         * Under ordinary circumstances you should not need to
+         * call this function, because Operators::connect will
+         * take care of this. However, if for some reason the
+         * overhead of Operators::connect is causing you serious
+         * problems, you can manage operator connections
+         * exclusively with Operators::connect_adj and call this
+         * whenever it makes sense to compute the new order.
          */
         void reorder()
         {

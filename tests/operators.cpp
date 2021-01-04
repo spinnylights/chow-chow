@@ -36,8 +36,6 @@ TEST_CASE("simple sig") {
     ops.connect(2, 1);
     ops.output(1);
 
-    ops.reorder();
-
     CHECK(std::fabs(ops.sig()) < 1e-15);
 
     ops.advance();
