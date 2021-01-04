@@ -37,8 +37,9 @@ performance.
 
 There is a simple end-to-end speed test available under
 `build/tests/perf` (with the default build settings) that you may
-find convenient. It outputs timing results for each sine
-algorithm using a test routine and the stdlib timing facilities.
+find convenient. It outputs timing results for a synthesis test
+routine over sets of operators using each sine algorithm,
+measured with the stdlib timing facilities.
 
 ### Style
 
