@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <iterator>
+#include <numeric>
 
 #include "chow-chow/operator.hpp"
 
@@ -13,6 +14,10 @@ namespace ChowChow {
     class Operators {
     public:
         using ops_col_t = std::array<Operator, N>;
+
+        Operators()
+            : oversamp_win(oversamp)
+        {}
 
         /**
          * @brief Subscripting.
@@ -136,20 +141,6 @@ namespace ChowChow {
         }
 
         /**
-         * @brief Advance the operators by a sample.
-         *
-         * Advance the internal state of the operators by a
-         * period of one sample. Should ordinarily be called once
-         * a frame.
-         */
-        void advance()
-        {
-            for (auto& o : ops) {
-                o.advance();
-            }
-        }
-
-        /**
          * @brief Recompute the unravelled order the operators will
          * be measured in.
          *
@@ -203,21 +194,49 @@ namespace ChowChow {
          */
         void sample_rate(uint64_t rate)
         {
-            for (auto& o : ops) {
-                o.sample_rate(rate);
-            }
+            sample_r = rate;
+            set_sr_ops();
         }
 
         /**
-         * @brief Compute the output signal.
+         * @brief Set the amount of oversampling.
          *
-         * @param time in seconds.
+         * Oversampling helps to prevent aliasing problems by
+         * sampling the operators at a rate well beyond the
+         * Nyquist limit. If you are having issues with aliasing,
+         * try increasing this value.
+         *
+         * @param amt a factor to multiply the sample rate by.
+         * 2–4 is generally sufficient if using one of the more
+         * accurate sine algorithms.
+         */
+        void oversampling(std::vector<double>::size_type amt)
+        {
+            if (amt == 0) {
+                amt = 1;
+            }
+
+            oversamp = amt;
+            oversamp_win.resize(oversamp);
+            set_sr_ops();
+        }
+
+        /**
+         * @brief Get the next output signal.
+         *
+         * Get the signal from the operators, advancing them by
+         * one sample period. This is effectful: repeated calls
+         * to this will advance the operators repeatedly, giving
+         * different results each time. Should generally be
+         * called once a frame.
          */
         double sig()
         {
-            compute_sig();
-
-            return sum_output();
+            if (oversamp == 1) {
+                return basic_sig();
+            } else {
+                return oversamp_sig();
+            }
         }
 
         /**
@@ -241,11 +260,14 @@ namespace ChowChow {
         }
 
     private:
+        uint64_t sample_r = Operator::DEFAULT_SR;
+        std::vector<double>::size_type oversamp = 1;
         ops_col_t ops = {};
         std::array<std::array<double, N>, N> cnctns = {};
         std::array<bool, N> outpts = {};
         std::vector<std::size_t> ord = {};
         std::array<double, N> sigs = {};
+        std::vector<double> oversamp_win;
 
         void compute_sig()
         {
@@ -277,6 +299,43 @@ namespace ChowChow {
             }
 
             return outp;
+        }
+
+        void set_sr_ops()
+        {
+            for (auto& o : ops) {
+                o.sample_rate(sample_r*oversamp);
+            }
+        }
+
+        void advance()
+        {
+            for (auto& o : ops) {
+                o.advance();
+            }
+        }
+
+        double basic_sig()
+        {
+            compute_sig();
+
+            auto o = sum_output();
+
+            advance();
+
+            return o;
+        }
+
+        double oversamp_sig()
+        {
+            for (auto& w : oversamp_win) {
+                w = basic_sig();
+            }
+
+            return std::accumulate(oversamp_win.begin(),
+                                   oversamp_win.end(),
+                                   0.)
+                   / oversamp;
         }
     };
 }

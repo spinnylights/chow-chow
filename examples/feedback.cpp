@@ -60,8 +60,6 @@ int main(void)
 
         out.push_back(sig);
         out.push_back(sig);
-
-        ops.advance();
     }
 
     const auto max = std::max_element(out.begin(), out.end());

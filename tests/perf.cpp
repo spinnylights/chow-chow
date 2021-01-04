@@ -100,7 +100,6 @@ private:
     {
         const auto before_run = t::steady_clock::now();
         const auto sig = ops.sig();
-        ops.advance();
         runtime += t::steady_clock::now() - before_run;
         return sig;
     }

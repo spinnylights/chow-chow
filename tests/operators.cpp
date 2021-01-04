@@ -14,9 +14,8 @@ TEST_CASE("setting output") {
     CHECK(ops.is_output(1));
 }
 
-TEST_CASE("simple sig") {
-    Operators<2> ops;
-
+void simple_sig_test(Operators<2>& ops, double initial_epsilon)
+{
     const double freq = 73.42; // ~d2
     const double vib_frq = 10;
     const double vib_amp = 1.;
@@ -36,11 +35,22 @@ TEST_CASE("simple sig") {
     ops.connect(2, 1);
     ops.output(1);
 
-    CHECK(std::fabs(ops.sig()) < 1e-15);
-
-    ops.advance();
-
+    CHECK(std::fabs(ops.sig()) < initial_epsilon);
     CHECK(std::abs(ops.sig()) > 1e-10);
+
     CHECK(ops[2].sig() == ops.check_sig(2));
     CHECK(ops[1].sig() == ops.check_sig(1));
+}
+
+TEST_CASE("simple sig") {
+    Operators<2> ops;
+
+    simple_sig_test(ops, 1e-15);
+}
+
+TEST_CASE("oversampling") {
+    Operators<2> ops;
+    ops.oversampling(4);
+
+    simple_sig_test(ops, 1e-1);
 }

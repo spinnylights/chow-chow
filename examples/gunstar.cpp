@@ -14,9 +14,7 @@ static constexpr std::size_t SAMPLE_RATE = 48000;
 static constexpr std::size_t OVERSAMPLING = 4;
 static constexpr std::size_t LENGTH_SECS = 20;
 
-static constexpr std::size_t RATE = SAMPLE_RATE * OVERSAMPLING;
 static constexpr std::size_t LENGTH = SAMPLE_RATE * LENGTH_SECS;
-static constexpr std::size_t OVERSAMP_LENGTH = LENGTH * OVERSAMPLING;
 
 static constexpr double FREQ = 73.42; // ~d2
 
@@ -35,7 +33,8 @@ void set_up_ops(Operators<4>& ops)
      * [1] [2] [3]
      */
 
-    ops.sample_rate(RATE);
+    ops.sample_rate(SAMPLE_RATE);
+    ops.oversampling(OVERSAMPLING);
 
     ops[4].freq(FREQ);
     ops[4].ratio(1.0);
@@ -73,7 +72,7 @@ void set_up_ops(Operators<4>& ops)
 
 void make_envelope(std::vector<double>& e)
 {
-    const size_t len = OVERSAMP_LENGTH;
+    const size_t len = LENGTH;
     const size_t frac = 275;
     const size_t up = len/frac;
     const size_t down = len - up;
@@ -97,7 +96,7 @@ void make_envelope(std::vector<double>& e)
 
 void make_ramp(std::vector<double>& r)
 {
-    const size_t len = OVERSAMP_LENGTH;
+    const size_t len = LENGTH;
     const size_t frac = 375;
     const size_t up = len/frac;
     const size_t down = len - up;
@@ -124,48 +123,33 @@ void run_synth(std::vector<double>& samples)
     std::vector<double> ramp;
     make_ramp(ramp);
 
-    std::array<double, OVERSAMPLING> oversample_win;
+    for (size_t i = 0; i < LENGTH; ++i) {
+        static const double scale_fact = .7;
 
-    for (size_t i = 0; i < OVERSAMP_LENGTH; (void)0) {
-        for (size_t j = 0; j < OVERSAMPLING; ++j) {
-            static const double scale_fact = .7;
+        double scale_fact_ramped = scale_fact * ramp[i];
+        ops[4].index(5.969 * scale_fact_ramped);
+        ops[3].index(8.231 * scale_fact_ramped);
+        ops[2].index(8.231 * scale_fact_ramped);
+        ops[1].index(20.96 * scale_fact_ramped);
 
-            double scale_fact_ramped = scale_fact * ramp[i];
-            ops[4].index(5.969 * scale_fact_ramped);
-            ops[3].index(8.231 * scale_fact_ramped);
-            ops[2].index(8.231 * scale_fact_ramped);
-            ops[1].index(20.96 * scale_fact_ramped);
+        double connection_str_ramped = 1.87 * scale_fact_ramped;
+        ops.connect_adj(4, 3, connection_str_ramped);
+        ops.connect_adj(4, 2, connection_str_ramped);
+        ops.connect_adj(4, 1, connection_str_ramped);
 
-            double connection_str_ramped = 1.87 * scale_fact_ramped;
-            ops.connect_adj(4, 3, connection_str_ramped);
-            ops.connect_adj(4, 2, connection_str_ramped);
-            ops.connect_adj(4, 1, connection_str_ramped);
+        double vib_amp_ramped = VIB_AMP - VIB_AMP * ramp[i];
+        ops[4].vibrato_amp(vib_amp_ramped);
+        ops[3].vibrato_amp(vib_amp_ramped);
+        ops[2].vibrato_amp(vib_amp_ramped);
+        ops[1].vibrato_amp(vib_amp_ramped);
 
-            double vib_amp_ramped = VIB_AMP - VIB_AMP * ramp[i];
-            ops[4].vibrato_amp(vib_amp_ramped);
-            ops[3].vibrato_amp(vib_amp_ramped);
-            ops[2].vibrato_amp(vib_amp_ramped);
-            ops[1].vibrato_amp(vib_amp_ramped);
+        double vib_amp_ramped_prdic = vib_amp_ramped * M_PI;
+        ops[4].vibrato_freq(std::sin(vib_amp_ramped_prdic * 239) * 40 + VIB_FRQ);
+        ops[3].vibrato_freq(std::sin(vib_amp_ramped_prdic * 182) * 38 + VIB_FRQ);
+        ops[2].vibrato_freq(std::sin(vib_amp_ramped_prdic * 403) * 18 + VIB_FRQ);
+        ops[1].vibrato_freq(std::sin(vib_amp_ramped_prdic * 213) * 90 + VIB_FRQ);
 
-            double vib_amp_ramped_prdic = vib_amp_ramped * M_PI;
-            ops[4].vibrato_freq(std::sin(vib_amp_ramped_prdic * 239) * 40 + VIB_FRQ);
-            ops[3].vibrato_freq(std::sin(vib_amp_ramped_prdic * 182) * 38 + VIB_FRQ);
-            ops[2].vibrato_freq(std::sin(vib_amp_ramped_prdic * 403) * 18 + VIB_FRQ);
-            ops[1].vibrato_freq(std::sin(vib_amp_ramped_prdic * 213) * 90 + VIB_FRQ);
-
-            oversample_win[j] = ops.sig() * envelope[i];
-
-            ops.advance();
-        }
-        i += OVERSAMPLING;
-
-        double sample =
-                  std::accumulate(oversample_win.begin(),
-                                  oversample_win.end(),
-                                  0.)
-                / OVERSAMPLING;
-
-        samples.push_back(sample);
+        samples.push_back(ops.sig() * envelope[i]);
     }
 }
 
